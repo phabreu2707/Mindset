@@ -1,43 +1,246 @@
-/* Classes aplicadas ao <html> da página pelo content.js, conforme as
-   preferências do usuário. Nada aqui roda sozinho — só ativa quando
-   a classe correspondente é adicionada. */
 
-/* ===== Modo calmo: pausa animações e transições ===== */
+/* =====================================================
+   FOCO CALMO — ESTILOS
+   ===================================================== */
+
+/* =====================================================
+   ESCONDER DISTRAÇÕES
+   ===================================================== */
+
+.fc-escondido {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* =====================================================
+   MODO CALMO
+   ===================================================== */
+
 html.fc-modo-calmo *,
 html.fc-modo-calmo *::before,
 html.fc-modo-calmo *::after {
-  animation-play-state: paused !important;
-  transition: none !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
 
-html.fc-modo-calmo video,
-html.fc-modo-calmo audio {
-  /* Impede autoplay: pausa qualquer mídia que tente tocar sozinha */
-  animation: none !important;
+/* =====================================================
+   FONTE LEGÍVEL
+   ===================================================== */
+
+html.fc-fonte-legivel,
+html.fc-fonte-legivel body,
+html.fc-fonte-legivel body *,
+html.fc-fonte-legivel button,
+html.fc-fonte-legivel input,
+html.fc-fonte-legivel textarea,
+html.fc-fonte-legivel select {
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif !important;
 }
 
-/* ===== Fonte legível e espaçamento maior ===== */
-html.fc-fonte-legivel body,
-html.fc-fonte-legivel body * {
-  font-family: Arial, "Segoe UI", sans-serif !important;
-  line-height: 1.7 !important;
-  letter-spacing: 0.02em !important;
+/* =====================================================
+   CORES SUAVES — FUNDO
+   ===================================================== */
+
+html.fc-cores-suaves {
+  background:
+    #f3f5f4 !important;
+}
+
+html.fc-cores-suaves body {
+  background:
+    #f3f5f4 !important;
+
+  color:
+    #26332f !important;
+}
+
+/* =====================================================
+   CORES SUAVES — TEXTOS
+   ===================================================== */
+
+html.fc-cores-suaves body,
+html.fc-cores-suaves p,
+html.fc-cores-suaves span,
+html.fc-cores-suaves div,
+html.fc-cores-suaves li,
+html.fc-cores-suaves td,
+html.fc-cores-suaves th,
+html.fc-cores-suaves label,
+html.fc-cores-suaves article,
+html.fc-cores-suaves section,
+html.fc-cores-suaves aside,
+html.fc-cores-suaves main,
+html.fc-cores-suaves blockquote,
+html.fc-cores-suaves dt,
+html.fc-cores-suaves dd {
+  color:
+    #26332f !important;
+}
+
+/* =====================================================
+   TÍTULOS
+   ===================================================== */
+
+html.fc-cores-suaves h1,
+html.fc-cores-suaves h2,
+html.fc-cores-suaves h3,
+html.fc-cores-suaves h4,
+html.fc-cores-suaves h5,
+html.fc-cores-suaves h6 {
+  color:
+    #19352d !important;
+}
+
+/* =====================================================
+   LINKS
+   ===================================================== */
+
+html.fc-cores-suaves a {
+  color:
+    #176b55 !important;
+}
+
+/* =====================================================
+   FUNDOS DE ÁREAS PRINCIPAIS
+   ===================================================== */
+
+html.fc-cores-suaves main,
+html.fc-cores-suaves article,
+html.fc-cores-suaves section,
+html.fc-cores-suaves aside,
+html.fc-cores-suaves header,
+html.fc-cores-suaves footer {
+  background-color:
+    #f3f5f4 !important;
+}
+
+/* =====================================================
+   CAMPOS
+   ===================================================== */
+
+html.fc-cores-suaves input,
+html.fc-cores-suaves textarea,
+html.fc-cores-suaves select {
+  background-color:
+    #ffffff !important;
+
+  color:
+    #26332f !important;
+
+  border-color:
+    #c8d5d0 !important;
+}
+
+/* =====================================================
+   BOTÕES
+   ===================================================== */
+
+html.fc-cores-suaves button {
+  background-color:
+    #dcebe5 !important;
+
+  color:
+    #173d32 !important;
+
+  border-color:
+    #b8cec5 !important;
+}
+
+/* =====================================================
+   TABELAS
+   ===================================================== */
+
+html.fc-cores-suaves table,
+html.fc-cores-suaves tr,
+html.fc-cores-suaves td,
+html.fc-cores-suaves th {
+  background-color:
+    #f3f5f4 !important;
+
+  border-color:
+    #d5dfdb !important;
+}
+
+/* =====================================================
+   MODO CALMO + FONTE
+   ===================================================== */
+
+html.fc-fonte-legivel body {
+  line-height:
+    1.55 !important;
 }
 
 html.fc-fonte-legivel p,
-html.fc-fonte-legivel li,
-html.fc-fonte-legivel span,
-html.fc-fonte-legivel div {
-  font-size: 1.05em !important;
+html.fc-fonte-legivel li {
+  letter-spacing:
+    0.01em !important;
 }
 
-/* ===== Cores suaves: reduz contraste agressivo e satura menos ===== */
-html.fc-cores-suaves {
-  filter: saturate(0.75) contrast(0.95) !important;
+/* =====================================================
+   AVISO DE PAUSA
+   ===================================================== */
+
+#fc-aviso-pausa {
+  position:
+    fixed !important;
+
+  bottom:
+    24px !important;
+
+  right:
+    24px !important;
+
+  z-index:
+    2147483647 !important;
+
+  background:
+    #176b55 !important;
+
+  color:
+    #ffffff !important;
+
+  padding:
+    14px 20px !important;
+
+  border-radius:
+    14px !important;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif !important;
+
+  font-size:
+    15px !important;
+
+  line-height:
+    1.4 !important;
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.18) !important;
+
+  opacity:
+    0 !important;
+
+  transform:
+    translateY(10px) !important;
+
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease !important;
 }
 
-/* ===== Esconde elementos marcados como distração pelo content.js ===== */
-.fc-escondido {
-  display: none !important;
+#fc-aviso-pausa.fc-aviso-visivel {
+  opacity:
+    1 !important;
+
+  transform:
+    translateY(0) !important;
 }
