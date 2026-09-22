@@ -1,0 +1,43 @@
+/* Classes aplicadas ao <html> da página pelo content.js, conforme as
+   preferências do usuário. Nada aqui roda sozinho — só ativa quando
+   a classe correspondente é adicionada. */
+
+/* ===== Modo calmo: pausa animações e transições ===== */
+html.fc-modo-calmo *,
+html.fc-modo-calmo *::before,
+html.fc-modo-calmo *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+html.fc-modo-calmo video,
+html.fc-modo-calmo audio {
+  /* Impede autoplay: pausa qualquer mídia que tente tocar sozinha */
+  animation: none !important;
+}
+
+/* ===== Fonte legível e espaçamento maior ===== */
+html.fc-fonte-legivel body,
+html.fc-fonte-legivel body * {
+  font-family: Arial, "Segoe UI", sans-serif !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0.02em !important;
+}
+
+html.fc-fonte-legivel p,
+html.fc-fonte-legivel li,
+html.fc-fonte-legivel span,
+html.fc-fonte-legivel div {
+  font-size: 1.05em !important;
+}
+
+/* ===== Cores suaves: reduz contraste agressivo e satura menos ===== */
+html.fc-cores-suaves {
+  filter: saturate(0.75) contrast(0.95) !important;
+}
+
+/* ===== Esconde elementos marcados como distração pelo content.js ===== */
+.fc-escondido {
+  display: none !important;
+}

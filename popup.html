@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Foco Calmo</title>
+  <style>
+    body { width: 280px; font-family: Arial, sans-serif; padding: 16px; color: #222; }
+    h1 { font-size: 16px; margin: 0 0 12px; }
+    .opcao { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .opcao:last-child { border-bottom: none; }
+    .opcao label { font-size: 14px; flex: 1; padding-right: 8px; }
+    .descricao { font-size: 11px; color: #777; display: block; margin-top: 2px; }
+    input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+    .rodape { margin-top: 12px; font-size: 11px; color: #999; text-align: center; }
+    .link-opcoes { display: block; margin-top: 10px; font-size: 12px; text-align: center; color: #0f6e56; cursor: pointer; text-decoration: none; }
+    .link-opcoes:hover { text-decoration: underline; }
+    .atalho { font-size: 10px; color: #999; }
+  </style>
+</head>
+<body>
+  <h1>Foco Calmo</h1>
+
+  <div class="opcao">
+    <label for="modoCalmo">
+      Modo calmo <span class="atalho">(Ctrl+Shift+C)</span>
+      <span class="descricao">Pausa animações e vídeos automáticos</span>
+    </label>
+    <input type="checkbox" id="modoCalmo" />
+  </div>
+
+  <div class="opcao">
+    <label for="fonteLegivel">
+      Fonte legível
+      <span class="descricao">Aumenta espaçamento e tamanho do texto</span>
+    </label>
+    <input type="checkbox" id="fonteLegivel" />
+  </div>
+
+  <div class="opcao">
+    <label for="coresSuaves">
+      Cores suaves
+      <span class="descricao">Reduz contraste e saturação da página</span>
+    </label>
+    <input type="checkbox" id="coresSuaves" />
+  </div>
+
+  <div class="opcao">
+    <label for="esconderDistracoes">
+      Esconder distrações
+      <span class="descricao">Remove pop-ups, banners e anúncios</span>
+    </label>
+    <input type="checkbox" id="esconderDistracoes" />
+  </div>
+
+  <div class="rodape" id="statusDominio"></div>
+  <a class="link-opcoes" id="abrirOpcoes">Mais configurações (timer, leitura em voz alta, por site)</a>
+
+  <script src="popup.js"></script>
+</body>
+</html>
