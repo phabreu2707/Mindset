@@ -1,57 +1,213 @@
-// popup.js — roda quando o usuário abre o popup da extensão.
-// Sempre mostra e salva as preferências GLOBAIS (válidas para todo site).
-// Preferências específicas de um site só se ajustam na página de opções.
+// =====================================================
+// FOCO CALMO - POPUP 3.1
+// =====================================================
 
 const campos = {
-  modoCalmo: document.getElementById("modoCalmo"),
-  fonteLegivel: document.getElementById("fonteLegivel"),
-  coresSuaves: document.getElementById("coresSuaves"),
-  esconderDistracoes: document.getElementById("esconderDistracoes")
+  modoCalmo:
+    document.getElementById(
+      "modoCalmo"
+    ),
+
+  fonteLegivel:
+    document.getElementById(
+      "fonteLegivel"
+    ),
+
+  coresSuaves:
+    document.getElementById(
+      "coresSuaves"
+    ),
+
+  esconderDistracoes:
+    document.getElementById(
+      "esconderDistracoes"
+    )
 };
 
-const chaves = Object.keys(campos);
+const chaves =
+  Object.keys(campos);
 
-chrome.storage.sync.get(chaves, (prefs) => {
-  chaves.forEach((chave) => {
-    campos[chave].checked = !!prefs[chave];
-  });
-});
+// =====================================================
+// CARREGAR PREFERÊNCIAS
+// =====================================================
 
-chrome.tabs.query({ active: true, currentWindow: true }, (abas) => {
-  if (abas[0]?.url) {
+chrome.storage.sync.get(
+  chaves,
+  (prefs) => {
+    chaves.forEach(
+      (chave) => {
+        if (campos[chave]) {
+          campos[chave].checked =
+            Boolean(
+              prefs[chave]
+            );
+        }
+      }
+    );
+  }
+);
+
+// =====================================================
+// MOSTRAR DOMÍNIO
+// =====================================================
+
+chrome.tabs.query(
+  {
+    active: true,
+    currentWindow: true
+  },
+  (abas) => {
+    const aba = abas[0];
+
+    if (!aba || !aba.url) {
+      return;
+    }
+
     try {
-      const dominio = new URL(abas[0].url).hostname.replace(/^www\./, "");
-      document.getElementById("statusDominio").textContent = `Aplicando em: ${dominio}`;
-    } catch (e) {
-      // URL interna do navegador (ex: chrome://), sem domínio a mostrar
+      const url =
+        new URL(aba.url);
+
+      const dominio =
+        url.hostname.replace(
+          /^www\./,
+          ""
+        );
+
+      const status =
+        document.getElementById(
+          "statusDominio"
+        );
+
+      if (status) {
+        status.textContent =
+          `Ativo em: ${dominio}`;
+      }
+
+    } catch (erro) {
+      const status =
+        document.getElementById(
+          "statusDominio"
+        );
+
+      if (status) {
+        status.textContent =
+          "Página especial do navegador";
+      }
     }
   }
-});
+);
 
-function salvarEAplicar() {
+// =====================================================
+// SALVAR E APLICAR
+// =====================================================
+
+async function salvarEAplicar() {
   const prefs = {};
-  chaves.forEach((chave) => { prefs[chave] = campos[chave].checked; });
 
-  chrome.storage.sync.set(prefs, () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (abas) => {
-      if (abas[0]?.id) {
-        chrome.tabs.sendMessage(abas[0].id, { tipo: "ATUALIZAR_PREFERENCIAS", prefs });
+  chaves.forEach(
+    (chave) => {
+      if (campos[chave]) {
+        prefs[chave] =
+          campos[chave].checked;
       }
+    }
+  );
+
+  chrome.storage.sync.set(
+    prefs
+  );
+
+  const abas =
+    await chrome.tabs.query({
+      active: true,
+      currentWindow: true
     });
-  });
+
+  const aba =
+    abas[0];
+
+  if (!aba || !aba.id) {
+    return;
+  }
+
+  chrome.tabs.sendMessage(
+    aba.id,
+    {
+      tipo:
+        "ATUALIZAR_PREFERENCIAS",
+      prefs
+    },
+    () => {
+      // Ignora erro em páginas onde
+      // extensões não podem executar.
+      void chrome.runtime.lastError;
+    }
+  );
 }
 
-chaves.forEach((chave) => campos[chave].addEventListener("change", salvarEAplicar));
+// =====================================================
+// EVENTOS
+// =====================================================
 
-document.getElementById("abrirOpcoes").addEventListener("click", () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (abas) => {
-    let urlOpcoes = chrome.runtime.getURL("options.html");
-    try {
-      const dominio = new URL(abas[0]?.url).hostname.replace(/^www\./, "");
-      urlOpcoes += `?dominio=${encodeURIComponent(dominio)}`;
-    } catch (e) {
-      // sem domínio (ex: chrome://), abre opções sem preferências por site
+chaves.forEach(
+  (chave) => {
+    if (campos[chave]) {
+      campos[chave].addEventListener(
+        "change",
+        salvarEAplicar
+      );
     }
-    chrome.tabs.create({ url: urlOpcoes });
-  });
-});
+  }
+);
+
+// =====================================================
+// ABRIR CONFIGURAÇÕES
+// =====================================================
+
+const botaoOpcoes =
+  document.getElementById(
+    "abrirOpcoes"
+  );
+
+if (botaoOpcoes) {
+  botaoOpcoes.addEventListener(
+    "click",
+    async () => {
+      const abas =
+        await chrome.tabs.query({
+          active: true,
+          currentWindow: true
+        });
+
+      const aba =
+        abas[0];
+
+      let urlOpcoes =
+        chrome.runtime.getURL(
+          "options.html"
+        );
+
+      try {
+        const dominio =
+          new URL(
+            aba.url
+          ).hostname.replace(
+            /^www\./,
+            ""
+          );
+
+        urlOpcoes +=
+          `?dominio=${encodeURIComponent(
+            dominio
+          )}`;
+
+      } catch (erro) {
+        // Página interna do Chrome.
+      }
+
+      chrome.tabs.create({
+        url: urlOpcoes
+      });
+    }
+  );
+}
