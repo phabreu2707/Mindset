@@ -1,10 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Foco Calmo — Acessibilidade para Autismo",
-  "version": "2.0",
-  "description": "Torna qualquer site mais calmo e fácil de usar: reduz animações, esconde distrações, simplifica fontes e cores para pessoas autistas.",
-  "permissions": ["storage", "activeTab", "scripting", "contextMenus", "tts"],
-  "host_permissions": ["<all_urls>"],
+  "name": "Foco Calmo — Acessibilidade",
+  "version": "3.1.0",
+  "description": "Ferramenta de acessibilidade para tornar páginas mais calmas, legíveis e com menos distrações.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Foco Calmo"
@@ -15,15 +22,24 @@
   },
   "commands": {
     "toggle-modo-calmo": {
-      "suggested_key": { "default": "Ctrl+Shift+C" },
-      "description": "Ativar/desativar modo calmo"
+      "suggested_key": {
+        "default": "Ctrl+Shift+C"
+      },
+      "description": "Ativar ou desativar o modo calmo"
     }
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["styles.css"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
       "run_at": "document_idle"
     }
   ],
