@@ -1,66 +1,261 @@
-// options.js — roda na página de configurações completa.
+// =====================================================
+// FOCO CALMO - OPTIONS
+// =====================================================
 
-const seletorTimer = document.getElementById("timerPausaMinutos");
-const statusSalvo = document.getElementById("statusSalvo");
+const seletorTimer =
+  document.getElementById(
+    "timerPausaMinutos"
+  );
+
+const statusSalvo =
+  document.getElementById(
+    "statusSalvo"
+  );
 
 function mostrarSalvo() {
-  statusSalvo.style.opacity = "1";
-  setTimeout(() => { statusSalvo.style.opacity = "0"; }, 1200);
+  if (!statusSalvo) {
+    return;
+  }
+
+  statusSalvo.style.opacity =
+    "1";
+
+  setTimeout(() => {
+    statusSalvo.style.opacity =
+      "0";
+  }, 1200);
 }
 
-// ===== Timer (preferência global) =====
-chrome.storage.sync.get(["timerPausaMinutos"], (prefs) => {
-  seletorTimer.value = String(prefs.timerPausaMinutos || 0);
-});
+// =====================================================
+// AVISAR ABA ATIVA
+// =====================================================
 
-seletorTimer.addEventListener("change", () => {
-  const minutos = Number(seletorTimer.value);
-  chrome.storage.sync.set({ timerPausaMinutos: minutos }, () => {
-    mostrarSalvo();
-    avisarAbaAtivaSePossivel({ timerPausaMinutos: minutos });
-  });
-});
+function avisarAbaAtivaSePossivel(
+  prefsParciais
+) {
+  chrome.tabs.query(
+    {
+      active: true,
+      lastFocusedWindow: true
+    },
+    (abas) => {
+      const aba = abas[0];
 
-function avisarAbaAtivaSePossivel(prefsParciais) {
-  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (abas) => {
-    if (abas[0]?.id) {
-      chrome.tabs.sendMessage(abas[0].id, { tipo: "ATUALIZAR_PREFERENCIAS", prefs: prefsParciais }, () => {
-        void chrome.runtime.lastError; // ignora se a aba não tiver o content script
-      });
+      if (!aba?.id) {
+        return;
+      }
+
+      chrome.tabs.sendMessage(
+        aba.id,
+        {
+          tipo:
+            "ATUALIZAR_PREFERENCIAS",
+          prefs:
+            prefsParciais
+        },
+        () => {
+          void chrome.runtime.lastError;
+        }
+      );
     }
-  });
+  );
 }
 
-// ===== Preferências por site =====
-// O domínio-alvo vem via ?dominio=exemplo.com na URL (setado pelo popup.js)
-const params = new URLSearchParams(location.search);
-const dominio = params.get("dominio");
+// =====================================================
+// TIMER
+// =====================================================
+
+chrome.storage.sync.get(
+  ["timerPausaMinutos"],
+  (prefs) => {
+    if (seletorTimer) {
+      seletorTimer.value =
+        String(
+          prefs.timerPausaMinutos || 0
+        );
+    }
+  }
+);
+
+if (seletorTimer) {
+  seletorTimer.addEventListener(
+    "change",
+    () => {
+      const minutos =
+        Number(
+          seletorTimer.value
+        );
+
+      chrome.storage.sync.set(
+        {
+          timerPausaMinutos:
+            minutos
+        },
+        () => {
+          mostrarSalvo();
+
+          avisarAbaAtivaSePossivel(
+            {
+              timerPausaMinutos:
+                minutos
+            }
+          );
+        }
+      );
+    }
+  );
+}
+
+// =====================================================
+// PREFERÊNCIAS POR SITE
+// =====================================================
+
+const params =
+  new URLSearchParams(
+    location.search
+  );
+
+const dominio =
+  params.get("dominio");
 
 const camposSite = {
-  siteModoCalmo: "modoCalmo",
-  siteFonteLegivel: "fonteLegivel",
-  siteCoresSuaves: "coresSuaves",
-  siteEsconderDistracoes: "esconderDistracoes"
+  siteModoCalmo:
+    "modoCalmo",
+
+  siteFonteLegivel:
+    "fonteLegivel",
+
+  siteCoresSuaves:
+    "coresSuaves",
+
+  siteEsconderDistracoes:
+    "esconderDistracoes"
 };
 
+// =====================================================
+// CONFIGURAÇÃO DO SITE
+// =====================================================
+
 if (dominio) {
-  document.getElementById("dominioAtualTexto").textContent = `Configurando preferências específicas para: ${dominio}`;
-  document.getElementById("camposPorSite").style.display = "block";
 
-  const chavesDominio = Object.values(camposSite).map((c) => `${dominio}:${c}`);
-  chrome.storage.sync.get(chavesDominio, (dados) => {
-    Object.entries(camposSite).forEach(([idCampo, chaveBase]) => {
-      document.getElementById(idCampo).checked = !!dados[`${dominio}:${chaveBase}`];
-    });
-  });
+  const texto =
+    document.getElementById(
+      "dominioAtualTexto"
+    );
 
-  Object.entries(camposSite).forEach(([idCampo, chaveBase]) => {
-    document.getElementById(idCampo).addEventListener("change", (evento) => {
-      const chaveCompleta = `${dominio}:${chaveBase}`;
-      chrome.storage.sync.set({ [chaveCompleta]: evento.target.checked }, () => {
-        mostrarSalvo();
-        avisarAbaAtivaSePossivel({ [chaveBase]: evento.target.checked });
-      });
-    });
-  });
+  const camposPorSite =
+    document.getElementById(
+      "camposPorSite"
+    );
+
+  const dominioExibido =
+    document.getElementById(
+      "dominioExibido"
+    );
+
+  if (texto) {
+    texto.textContent =
+      "Estas preferências serão usadas somente neste site.";
+  }
+
+  if (dominioExibido) {
+    dominioExibido.textContent =
+      dominio;
+  }
+
+  if (camposPorSite) {
+    camposPorSite.style.display =
+      "block";
+  }
+
+  // ===============================================
+  // CARREGAR
+  // ===============================================
+
+  const chavesDominio =
+    Object.values(
+      camposSite
+    ).map(
+      chave =>
+        `${dominio}:${chave}`
+    );
+
+  chrome.storage.sync.get(
+    chavesDominio,
+    (dados) => {
+
+      Object.entries(
+        camposSite
+      ).forEach(
+        ([idCampo, chaveBase]) => {
+
+          const campo =
+            document.getElementById(
+              idCampo
+            );
+
+          if (!campo) {
+            return;
+          }
+
+          campo.checked =
+            Boolean(
+              dados[
+                `${dominio}:${chaveBase}`
+              ]
+            );
+        }
+      );
+    }
+  );
+
+  // ===============================================
+  // SALVAR
+  // ===============================================
+
+  Object.entries(
+    camposSite
+  ).forEach(
+    ([idCampo, chaveBase]) => {
+
+      const campo =
+        document.getElementById(
+          idCampo
+        );
+
+      if (!campo) {
+        return;
+      }
+
+      campo.addEventListener(
+        "change",
+        (evento) => {
+
+          const chaveCompleta =
+            `${dominio}:${chaveBase}`;
+
+          const valor =
+            evento.target.checked;
+
+          chrome.storage.sync.set(
+            {
+              [chaveCompleta]:
+                valor
+            },
+            () => {
+
+              mostrarSalvo();
+
+              avisarAbaAtivaSePossivel(
+                {
+                  [chaveBase]:
+                    valor
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
 }
