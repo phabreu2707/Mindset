@@ -1,213 +1,136 @@
-// =====================================================
-// FOCO CALMO - POPUP 3.1
-// =====================================================
+const IDS = [
+  "modoCalmo",
+  "fonteLegivel",
+  "coresSuaves",
+  "esconderDistracoes"
+];
 
-const campos = {
-  modoCalmo:
-    document.getElementById(
-      "modoCalmo"
-    ),
-
-  fonteLegivel:
-    document.getElementById(
-      "fonteLegivel"
-    ),
-
-  coresSuaves:
-    document.getElementById(
-      "coresSuaves"
-    ),
-
-  esconderDistracoes:
-    document.getElementById(
-      "esconderDistracoes"
-    )
+const padrao = {
+  modoCalmo: false,
+  fonteLegivel: false,
+  coresSuaves: false,
+  esconderDistracoes: false
 };
 
-const chaves =
-  Object.keys(campos);
+const $ = (id) =>
+  document.getElementById(id);
 
-// =====================================================
-// CARREGAR PREFERÊNCIAS
-// =====================================================
+function mostrarStatus(texto) {
+  $("status").textContent =
+    texto;
+}
 
-chrome.storage.sync.get(
-  chaves,
-  (prefs) => {
-    chaves.forEach(
-      (chave) => {
-        if (campos[chave]) {
-          campos[chave].checked =
+function enviarParaAba(mensagem) {
+  chrome.tabs.query(
+    {
+      active: true,
+      currentWindow: true
+    },
+    (abas) => {
+      const aba = abas[0];
+
+      if (
+        !aba ||
+        !aba.id ||
+        !/^https?:\/\//i.test(
+          aba.url || ""
+        )
+      ) {
+        mostrarStatus(
+          "Esta página não permite a extensão."
+        );
+
+        return;
+      }
+
+      chrome.tabs.sendMessage(
+        aba.id,
+        mensagem,
+        () => {
+          void chrome.runtime.lastError;
+        }
+      );
+    }
+  );
+}
+
+function lerPreferencias(callback) {
+  chrome.storage.sync.get(
+    padrao,
+    (prefs) => {
+
+      IDS.forEach(
+        (id) => {
+          $(id).checked =
             Boolean(
-              prefs[chave]
+              prefs[id]
             );
         }
-      }
-    );
-  }
-);
+      );
 
-// =====================================================
-// MOSTRAR DOMÍNIO
-// =====================================================
-
-chrome.tabs.query(
-  {
-    active: true,
-    currentWindow: true
-  },
-  (abas) => {
-    const aba = abas[0];
-
-    if (!aba || !aba.url) {
-      return;
+      callback?.(prefs);
     }
+  );
+}
 
-    try {
-      const url =
-        new URL(aba.url);
-
-      const dominio =
-        url.hostname.replace(
-          /^www\./,
-          ""
-        );
-
-      const status =
-        document.getElementById(
-          "statusDominio"
-        );
-
-      if (status) {
-        status.textContent =
-          `Ativo em: ${dominio}`;
-      }
-
-    } catch (erro) {
-      const status =
-        document.getElementById(
-          "statusDominio"
-        );
-
-      if (status) {
-        status.textContent =
-          "Página especial do navegador";
-      }
-    }
-  }
-);
-
-// =====================================================
-// SALVAR E APLICAR
-// =====================================================
-
-async function salvarEAplicar() {
+function salvarPreferencias() {
   const prefs = {};
 
-  chaves.forEach(
-    (chave) => {
-      if (campos[chave]) {
-        prefs[chave] =
-          campos[chave].checked;
-      }
+  IDS.forEach(
+    (id) => {
+      prefs[id] =
+        $(id).checked;
     }
   );
 
   chrome.storage.sync.set(
-    prefs
-  );
-
-  const abas =
-    await chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    });
-
-  const aba =
-    abas[0];
-
-  if (!aba || !aba.id) {
-    return;
-  }
-
-  chrome.tabs.sendMessage(
-    aba.id,
-    {
-      tipo:
-        "ATUALIZAR_PREFERENCIAS",
-      prefs
-    },
+    prefs,
     () => {
-      // Ignora erro em páginas onde
-      // extensões não podem executar.
-      void chrome.runtime.lastError;
+
+      enviarParaAba({
+        tipo:
+          "ATUALIZAR_PREFERENCIAS",
+
+        prefs
+      });
+
+      mostrarStatus(
+        "Preferências aplicadas."
+      );
     }
   );
 }
 
-// =====================================================
-// EVENTOS
-// =====================================================
-
-chaves.forEach(
-  (chave) => {
-    if (campos[chave]) {
-      campos[chave].addEventListener(
-        "change",
-        salvarEAplicar
-      );
-    }
+IDS.forEach(
+  (id) => {
+    $(id).addEventListener(
+      "change",
+      salvarPreferencias
+    );
   }
 );
 
-// =====================================================
-// ABRIR CONFIGURAÇÕES
-// =====================================================
-
-const botaoOpcoes =
-  document.getElementById(
-    "abrirOpcoes"
-  );
-
-if (botaoOpcoes) {
-  botaoOpcoes.addEventListener(
+$("iniciarTimer")
+  .addEventListener(
     "click",
-    async () => {
-      const abas =
-        await chrome.tabs.query({
-          active: true,
-          currentWindow: true
-        });
+    () => {
 
-      const aba =
-        abas[0];
-
-      let urlOpcoes =
-        chrome.runtime.getURL(
-          "options.html"
+      const segundos =
+        Number(
+          $("tempoFoco").value
         );
 
-      try {
-        const dominio =
-          new URL(
-            aba.url
-          ).hostname.replace(
-            /^www\./,
-            ""
-          );
+      enviarParaAba({
+        tipo:
+          "INICIAR_TIMER",
 
-        urlOpcoes +=
-          `?dominio=${encodeURIComponent(
-            dominio
-          )}`;
-
-      } catch (erro) {
-        // Página interna do Chrome.
-      }
-
-      chrome.tabs.create({
-        url: urlOpcoes
+        segundos
       });
+
+      mostrarStatus(
+        "Timer iniciado nesta página."
+      );
     }
   );
-}
+
+lerPreferencias();
