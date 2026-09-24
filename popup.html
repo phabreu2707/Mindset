@@ -3,6 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>Foco Calmo</title>
 
   <style>
@@ -11,302 +17,258 @@
     }
 
     body {
-      width: 340px;
+      width: 300px;
       margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f4f7f5;
-      color: #23332d;
+      padding: 16px;
+
+      background: #f4f2ed;
+      color: #262626;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
     }
 
-    .cabecalho {
-      background: linear-gradient(
-        135deg,
-        #176b55,
-        #23856b
-      );
+    h1 {
+      margin:
+        0 0 4px;
 
-      color: white;
-      padding: 20px;
-    }
-
-    .marca {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .icone {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.18);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 21px;
-    }
-
-    .titulo {
-      font-size: 19px;
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .subtitulo {
-      margin-top: 3px;
-      font-size: 11px;
-      opacity: 0.85;
-    }
-
-    .conteudo {
-      padding: 12px 16px 16px;
-    }
-
-    .opcao {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 13px 2px;
-      border-bottom: 1px solid #dfe8e3;
-    }
-
-    .opcao:last-of-type {
-      border-bottom: none;
-    }
-
-    .texto {
-      flex: 1;
-    }
-
-    .nome {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      color: #263a33;
+      font-size:
+        18px;
     }
 
     .descricao {
-      display: block;
-      margin-top: 3px;
-      font-size: 11px;
-      line-height: 1.35;
-      color: #718078;
+      margin:
+        0 0 16px;
+
+      color:
+        #555;
+
+      font-size:
+        12px;
+
+      line-height:
+        1.4;
     }
 
-    .atalho {
-      font-size: 9px;
-      color: #87968f;
+    .opcao {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        10px;
+
+      padding:
+        9px 0;
+
+      font-size:
+        14px;
     }
 
-    /* SWITCH */
+    .opcao input {
+      width:
+        18px;
 
-    .switch {
-      position: relative;
-      width: 43px;
-      height: 24px;
-      flex-shrink: 0;
+      height:
+        18px;
     }
 
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
+    .grupo {
+      margin-top:
+        14px;
+
+      padding-top:
+        12px;
+
+      border-top:
+        1px solid #d5d2ca;
     }
 
-    .slider {
-      position: absolute;
-      inset: 0;
-      cursor: pointer;
-      background: #cbd7d2;
-      border-radius: 30px;
-      transition: 0.2s;
+    .grupo strong {
+      display:
+        block;
+
+      margin-bottom:
+        8px;
+
+      font-size:
+        13px;
     }
 
-    .slider::before {
-      content: "";
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      left: 3px;
-      top: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    .linha-timer {
+      display:
+        flex;
+
+      gap:
+        8px;
     }
 
-    .switch input:checked + .slider {
-      background: #176b55;
+    select,
+    button {
+      min-height:
+        36px;
+
+      border:
+        1px solid #c8c5bd;
+
+      border-radius:
+        8px;
+
+      background:
+        #fff;
+
+      color:
+        #262626;
+
+      font-family:
+        inherit;
     }
 
-    .switch input:checked + .slider::before {
-      transform: translateX(19px);
+    select {
+      flex:
+        1;
+
+      padding:
+        0 8px;
     }
 
-    .status {
-      text-align: center;
-      min-height: 18px;
-      padding-top: 6px;
-      font-size: 10px;
-      color: #809088;
+    button {
+      padding:
+        0 12px;
+
+      cursor:
+        pointer;
     }
 
-    .link-opcoes {
-      display: block;
-      margin-top: 8px;
-      padding: 11px;
-      border-radius: 10px;
-      text-align: center;
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 600;
-      color: #176b55;
-      background: #e1eee9;
-      transition: .2s;
-      cursor: pointer;
+    button:hover {
+      background:
+        #eeeae2;
     }
 
-    .link-opcoes:hover {
-      background: #d4e7df;
-    }
+    #status {
+      min-height:
+        18px;
 
-    .rodape {
-      margin-top: 12px;
-      text-align: center;
-      font-size: 9px;
-      color: #9aa7a1;
+      margin-top:
+        12px;
+
+      font-size:
+        12px;
+
+      color:
+        #555;
     }
   </style>
 </head>
 
 <body>
 
-  <header class="cabecalho">
-    <div class="marca">
-      <div class="icone">🌿</div>
+  <h1>Foco Calmo</h1>
 
-      <div>
-        <h1 class="titulo">
-          Foco Calmo
-        </h1>
+  <p class="descricao">
+    Menos distrações, leitura mais confortável
+    e uma página mais tranquila.
+  </p>
 
-        <div class="subtitulo">
-          Acessibilidade e concentração
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main class="conteudo">
-
-    <div class="opcao">
-      <div class="texto">
-        <span class="nome">
-          Modo calmo
-          <span class="atalho">
-            Ctrl+Shift+C
-          </span>
-        </span>
-
-        <span class="descricao">
-          Reduz animações e pausa vídeos normais.
-        </span>
-      </div>
-
-      <label class="switch">
-        <input
-          type="checkbox"
-          id="modoCalmo"
-        >
-        <span class="slider"></span>
-      </label>
-    </div>
-
-
-    <div class="opcao">
-      <div class="texto">
-        <span class="nome">
-          Fonte legível
-        </span>
-
-        <span class="descricao">
-          Usa uma fonte simples e facilita a leitura.
-        </span>
-      </div>
-
-      <label class="switch">
-        <input
-          type="checkbox"
-          id="fonteLegivel"
-        >
-        <span class="slider"></span>
-      </label>
-    </div>
-
-
-    <div class="opcao">
-      <div class="texto">
-        <span class="nome">
-          Cores suaves
-        </span>
-
-        <span class="descricao">
-          Reduz cores fortes e deixa a página mais calma.
-        </span>
-      </div>
-
-      <label class="switch">
-        <input
-          type="checkbox"
-          id="coresSuaves"
-        >
-        <span class="slider"></span>
-      </label>
-    </div>
-
-
-    <div class="opcao">
-      <div class="texto">
-        <span class="nome">
-          Esconder distrações
-        </span>
-
-        <span class="descricao">
-          Esconde anúncios, pop-ups e banners.
-        </span>
-      </div>
-
-      <label class="switch">
-        <input
-          type="checkbox"
-          id="esconderDistracoes"
-        >
-        <span class="slider"></span>
-      </label>
-    </div>
-
-
-    <div
-      class="status"
-      id="statusDominio"
-    ></div>
-
-
-    <a
-      class="link-opcoes"
-      id="abrirOpcoes"
+  <label class="opcao">
+    <input
+      type="checkbox"
+      id="modoCalmo"
     >
-      ⚙ Mais configurações
-    </a>
 
-    <div class="rodape">
-      Foco Calmo • Acessibilidade
+    <span>
+      Modo Calmo
+    </span>
+  </label>
+
+  <label class="opcao">
+    <input
+      type="checkbox"
+      id="fonteLegivel"
+    >
+
+    <span>
+      Fonte legível
+    </span>
+  </label>
+
+  <label class="opcao">
+    <input
+      type="checkbox"
+      id="coresSuaves"
+    >
+
+    <span>
+      Cores suaves
+    </span>
+  </label>
+
+  <label class="opcao">
+    <input
+      type="checkbox"
+      id="esconderDistracoes"
+    >
+
+    <span>
+      Esconder anúncios e distrações
+    </span>
+  </label>
+
+  <div class="grupo">
+
+    <strong>
+      Timer de foco
+    </strong>
+
+    <div class="linha-timer">
+
+      <select id="tempoFoco">
+
+        <option value="300">
+          5 minutos
+        </option>
+
+        <option value="900">
+          15 minutos
+        </option>
+
+        <option value="1800">
+          30 minutos
+        </option>
+
+        <option value="2700">
+          45 minutos
+        </option>
+
+        <option value="3600">
+          60 minutos
+        </option>
+
+      </select>
+
+      <button
+        id="iniciarTimer"
+        type="button"
+      >
+        Iniciar
+      </button>
+
     </div>
 
-  </main>
+  </div>
+
+  <div
+    id="status"
+    role="status"
+    aria-live="polite"
+  ></div>
 
   <script src="popup.js"></script>
 
 </body>
+
 </html>
