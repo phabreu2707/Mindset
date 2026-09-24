@@ -1,12 +1,6 @@
+/* Foco Calmo 4.1 */
 
-/* =====================================================
-   FOCO CALMO — ESTILOS
-   ===================================================== */
-
-/* =====================================================
-   ESCONDER DISTRAÇÕES
-   ===================================================== */
-
+/* Elementos identificados como publicidade */
 .fc-escondido {
   display: none !important;
   visibility: hidden !important;
@@ -14,233 +8,208 @@
   pointer-events: none !important;
 }
 
-/* =====================================================
+/* =========================
    MODO CALMO
-   ===================================================== */
+   ========================= */
 
 html.fc-modo-calmo *,
 html.fc-modo-calmo *::before,
 html.fc-modo-calmo *::after {
-  animation-duration: 0.01ms !important;
+  animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+  transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
+  caret-color: currentColor !important;
 }
 
-/* =====================================================
-   FONTE LEGÍVEL
-   ===================================================== */
+html.fc-modo-calmo video,
+html.fc-modo-calmo audio {
+  animation: none !important;
+}
 
-html.fc-fonte-legivel,
+/* =========================
+   FONTE LEGÍVEL
+   ========================= */
+
 html.fc-fonte-legivel body,
-html.fc-fonte-legivel body *,
-html.fc-fonte-legivel button,
-html.fc-fonte-legivel input,
-html.fc-fonte-legivel textarea,
-html.fc-fonte-legivel select {
+html.fc-fonte-legivel body p,
+html.fc-fonte-legivel body li,
+html.fc-fonte-legivel body dt,
+html.fc-fonte-legivel body dd,
+html.fc-fonte-legivel body h1,
+html.fc-fonte-legivel body h2,
+html.fc-fonte-legivel body h3,
+html.fc-fonte-legivel body h4,
+html.fc-fonte-legivel body h5,
+html.fc-fonte-legivel body h6,
+html.fc-fonte-legivel body label,
+html.fc-fonte-legivel body button,
+html.fc-fonte-legivel body input,
+html.fc-fonte-legivel body textarea,
+html.fc-fonte-legivel body select,
+html.fc-fonte-legivel body blockquote,
+html.fc-fonte-legivel body figcaption {
   font-family:
     Arial,
     Helvetica,
     sans-serif !important;
 }
 
-/* =====================================================
-   CORES SUAVES — FUNDO
-   ===================================================== */
+html.fc-fonte-legivel body p,
+html.fc-fonte-legivel body li,
+html.fc-fonte-legivel body blockquote {
+  line-height: 1.65 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* =========================
+   CORES SUAVES
+   ========================= */
 
 html.fc-cores-suaves {
-  background:
-    #f3f5f4 !important;
+  --fc-bg: #f3f1eb;
+  --fc-text: #262626;
+  --fc-heading: #303640;
+  --fc-link: #245a78;
+  --fc-visited: #514d78;
+  --fc-border: #c9c7c0;
 }
 
 html.fc-cores-suaves body {
-  background:
-    #f3f5f4 !important;
-
-  color:
-    #26332f !important;
-}
-
-/* =====================================================
-   CORES SUAVES — TEXTOS
-   ===================================================== */
-
-html.fc-cores-suaves body,
-html.fc-cores-suaves p,
-html.fc-cores-suaves span,
-html.fc-cores-suaves div,
-html.fc-cores-suaves li,
-html.fc-cores-suaves td,
-html.fc-cores-suaves th,
-html.fc-cores-suaves label,
-html.fc-cores-suaves article,
-html.fc-cores-suaves section,
-html.fc-cores-suaves aside,
-html.fc-cores-suaves main,
-html.fc-cores-suaves blockquote,
-html.fc-cores-suaves dt,
-html.fc-cores-suaves dd {
-  color:
-    #26332f !important;
-}
-
-/* =====================================================
-   TÍTULOS
-   ===================================================== */
-
-html.fc-cores-suaves h1,
-html.fc-cores-suaves h2,
-html.fc-cores-suaves h3,
-html.fc-cores-suaves h4,
-html.fc-cores-suaves h5,
-html.fc-cores-suaves h6 {
-  color:
-    #19352d !important;
-}
-
-/* =====================================================
-   LINKS
-   ===================================================== */
-
-html.fc-cores-suaves a {
-  color:
-    #176b55 !important;
-}
-
-/* =====================================================
-   FUNDOS DE ÁREAS PRINCIPAIS
-   ===================================================== */
-
-html.fc-cores-suaves main,
-html.fc-cores-suaves article,
-html.fc-cores-suaves section,
-html.fc-cores-suaves aside,
-html.fc-cores-suaves header,
-html.fc-cores-suaves footer {
   background-color:
-    #f3f5f4 !important;
+    var(--fc-bg) !important;
+
+  color:
+    var(--fc-text) !important;
 }
 
-/* =====================================================
-   CAMPOS
-   ===================================================== */
+html.fc-cores-suaves body p,
+html.fc-cores-suaves body li,
+html.fc-cores-suaves body dt,
+html.fc-cores-suaves body dd,
+html.fc-cores-suaves body blockquote,
+html.fc-cores-suaves body figcaption,
+html.fc-cores-suaves body caption {
+  color:
+    var(--fc-text) !important;
+}
 
-html.fc-cores-suaves input,
-html.fc-cores-suaves textarea,
-html.fc-cores-suaves select {
+html.fc-cores-suaves body h1,
+html.fc-cores-suaves body h2,
+html.fc-cores-suaves body h3,
+html.fc-cores-suaves body h4,
+html.fc-cores-suaves body h5,
+html.fc-cores-suaves body h6 {
+  color:
+    var(--fc-heading) !important;
+}
+
+html.fc-cores-suaves body a {
+  color:
+    var(--fc-link) !important;
+}
+
+html.fc-cores-suaves body a:visited {
+  color:
+    var(--fc-visited) !important;
+}
+
+html.fc-cores-suaves body input,
+html.fc-cores-suaves body textarea,
+html.fc-cores-suaves body select {
+  color:
+    var(--fc-text) !important;
+
   background-color:
     #ffffff !important;
 
-  color:
-    #26332f !important;
-
   border-color:
-    #c8d5d0 !important;
+    var(--fc-border) !important;
 }
 
-/* =====================================================
-   BOTÕES
-   ===================================================== */
-
-html.fc-cores-suaves button {
-  background-color:
-    #dcebe5 !important;
-
-  color:
-    #173d32 !important;
-
+html.fc-cores-suaves body button {
+  color: #202020 !important;
   border-color:
-    #b8cec5 !important;
+    var(--fc-border) !important;
 }
 
-/* =====================================================
-   TABELAS
-   ===================================================== */
+/* =========================
+   FOCO PELO TECLADO
+   ========================= */
 
-html.fc-cores-suaves table,
-html.fc-cores-suaves tr,
-html.fc-cores-suaves td,
-html.fc-cores-suaves th {
-  background-color:
-    #f3f5f4 !important;
+html.fc-modo-calmo :focus-visible,
+html.fc-fonte-legivel :focus-visible,
+html.fc-cores-suaves :focus-visible {
+  outline:
+    3px solid #245a78 !important;
 
-  border-color:
-    #d5dfdb !important;
+  outline-offset:
+    2px !important;
 }
 
-/* =====================================================
-   MODO CALMO + FONTE
-   ===================================================== */
+/* =========================
+   TIMER
+   ========================= */
 
-html.fc-fonte-legivel body {
-  line-height:
-    1.55 !important;
-}
+html.fc-timer-finalizado::before {
+  content:
+    "Tempo de foco concluído";
 
-html.fc-fonte-legivel p,
-html.fc-fonte-legivel li {
-  letter-spacing:
-    0.01em !important;
-}
-
-/* =====================================================
-   AVISO DE PAUSA
-   ===================================================== */
-
-#fc-aviso-pausa {
   position:
     fixed !important;
 
-  bottom:
-    24px !important;
+  left:
+    50% !important;
 
-  right:
-    24px !important;
+  bottom:
+    18px !important;
+
+  transform:
+    translateX(-50%) !important;
 
   z-index:
     2147483647 !important;
 
-  background:
-    #176b55 !important;
-
-  color:
-    #ffffff !important;
-
   padding:
-    14px 20px !important;
+    10px 14px !important;
+
+  border:
+    1px solid #c9c7c0 !important;
 
   border-radius:
-    14px !important;
+    10px !important;
 
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif !important;
+  background:
+    #ffffff !important;
 
-  font-size:
-    15px !important;
+  color:
+    #262626 !important;
 
-  line-height:
-    1.4 !important;
+  font:
+    600 14px Arial, Helvetica, sans-serif !important;
 
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.18) !important;
-
-  opacity:
-    0 !important;
-
-  transform:
-    translateY(10px) !important;
-
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease !important;
+    0 4px 18px rgba(0, 0, 0, 0.15) !important;
 }
 
-#fc-aviso-pausa.fc-aviso-visivel {
-  opacity:
-    1 !important;
+/* =========================
+   REDUÇÃO DE MOVIMENTO
+   ========================= */
 
-  transform:
-    translateY(0) !important;
+@media (prefers-reduced-motion: reduce) {
+  html.fc-modo-calmo *,
+  html.fc-modo-calmo *::before,
+  html.fc-modo-calmo *::after {
+    animation-duration:
+      0.001ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.001ms !important;
+
+    scroll-behavior:
+      auto !important;
+  }
 }
