@@ -1,18 +1,9 @@
-// =====================================================
-// FOCO CALMO - CONTENT SCRIPT 3.1
-// =====================================================
-
 (() => {
-  // Evita inicializar o script duas vezes
   if (window.__FOCO_CALMO_INICIADO__) {
     return;
   }
 
   window.__FOCO_CALMO_INICIADO__ = true;
-
-  // ===================================================
-  // CLASSES
-  // ===================================================
 
   const CLASSES = {
     modoCalmo: "fc-modo-calmo",
@@ -21,493 +12,656 @@
     escondido: "fc-escondido"
   };
 
-  // ===================================================
-  // SELETORES DE DISTRAÇÕES
-  // ===================================================
+  const PREFERENCIAS_PADRAO = {
+    modoCalmo: false,
+    fonteLegivel: false,
+    coresSuaves: false,
+    esconderDistracoes: false
+  };
 
-  const SELETORES_DISTRACAO = [
-    // Google / publicidade
-    ".adsbygoogle",
+  /*
+   * Domínios normalmente usados para publicidade.
+   */
+  const HOSTS_PUBLICIDADE = [
+    "doubleclick.net",
+    "googlesyndication.com",
+    "googleadservices.com",
+    "googletagservices.com",
+    "securepubads.g.doubleclick.net",
+    "adnxs.com",
+    "adnxs.net",
+    "criteo.com",
+    "criteo.net",
+    "taboola.com",
+    "outbrain.com",
+    "amazon-adsystem.com",
+    "2mdn.net",
+    "adsrvr.org",
+    "rubiconproject.com",
+    "pubmatic.com",
+    "openx.net",
+    "sharethrough.com"
+  ];
+
+  /*
+   * Palavras que aparecem com frequência em elementos
+   * de publicidade.
+   */
+  const REGEX_PUBLICIDADE =
+    /(^|[-_\s])(?:ad|ads|advert|advertisement|advertising|adserver|adslot|adunit|adwrapper|adcontainer|adbanner|adsbygoogle|sponsored|sponsor|patrocinado|publicidade|anuncio|anúncio|interstitial|sticky-ad|overlay-ad|dfp|dart|taboola|outbrain|doubleclick|googlesyndication|googleadservices|adnxs|criteo|amazon-adsystem)(?=$|[-_\s])/i;
+
+  /*
+   * Elementos que são fortes candidatos a publicidade.
+   */
+  const SELETORES_PUBLICIDADE = [
     "ins.adsbygoogle",
-    ".gpt-ad",
-    ".dfp-ad",
-    ".ad-container",
-    ".ad-wrapper",
-    ".ad-banner",
-    ".advert-container",
-    ".advertisement",
-    ".advertising",
 
-    // Classes comuns
-    "[class*='advertisement']",
-    "[class*='advertising']",
-    "[class*='ad-container']",
-    "[class*='ad-wrapper']",
-    "[class*='ad-banner']",
-    "[class*='ads-container']",
-    "[class*='ads-wrapper']",
-    "[class*='sponsored']",
-    "[class*='sponsor']",
-    "[class*='publicidade']",
-    "[class*='anuncio']",
-    "[class*='anúncio']",
-
-    // IDs
-    "[id*='advertisement']",
-    "[id*='advertising']",
-    "[id*='ad-container']",
-    "[id*='ad-wrapper']",
-    "[id*='ad-banner']",
-    "[id*='ads-container']",
-    "[id*='publicidade']",
-    "[id*='anuncio']",
-    "[id*='anúncio']",
-
-    // Dados de publicidade
     "[data-ad]",
     "[data-ad-slot]",
     "[data-ad-client]",
-    "[data-ad-unit]",
     "[data-ad-format]",
     "[data-advertisement]",
-    "[data-advertiser]",
     "[data-google-query-id]",
-    "[data-google-ad]",
 
-    // Patrocinado
     "[aria-label*='advertisement' i]",
-    "[aria-label*='publicidade' i]",
-    "[aria-label*='anúncio' i]",
-    "[aria-label*='anuncio' i]",
     "[aria-label*='sponsored' i]",
+    "[aria-label*='publicidade' i]",
     "[aria-label*='patrocinado' i]",
 
-    // Popups
-    "[class*='popup']",
-    "[id*='popup']",
+    "[id*='taboola' i]",
+    "[class*='taboola' i]",
 
-    // Intersticiais
-    "[class*='interstitial']",
-    "[id*='interstitial']",
+    "[id*='outbrain' i]",
+    "[class*='outbrain' i]",
 
-    // Overlays
-    "[class*='overlay-ad']",
-    "[id*='overlay-ad']",
+    "[id*='adsbygoogle' i]",
+    "[class*='adsbygoogle' i]",
 
-    // Cookies
-    "[class*='cookie-banner']",
-    "[id*='cookie-banner']",
-    "[class*='cookie-consent']",
-    "[id*='cookie-consent']",
-    "[class*='consent-banner']",
-    "[id*='consent-banner']",
+    "[id*='dfp' i]",
+    "[class*='dfp' i]",
 
-    // Newsletter
-    "[class*='newsletter-popup']",
-    "[id*='newsletter-popup']",
-    "[class*='subscribe-popup']",
-    "[id*='subscribe-popup']",
-
-    // Banners flutuantes
-    "[class*='sticky-banner']",
-    "[id*='sticky-banner']",
-    "[class*='floating-banner']",
-    "[id*='floating-banner']",
-
-    // Iframes publicitários
-    "iframe[src*='doubleclick']",
-    "iframe[src*='googlesyndication']",
-    "iframe[src*='googleadservices']",
-    "iframe[src*='adservice']",
-    "iframe[src*='adsystem']",
-
-    // Vídeos publicitários conhecidos
-    ".video-ads",
-    ".ytp-ad-module",
-    ".ytp-ad-overlay-container",
-    ".ytp-ad-text",
-    ".ad-showing"
+    "iframe[src*='doubleclick' i]",
+    "iframe[src*='googlesyndication' i]",
+    "iframe[src*='googleadservices' i]",
+    "iframe[src*='adnxs' i]",
+    "iframe[src*='criteo' i]",
+    "iframe[src*='taboola' i]",
+    "iframe[src*='outbrain' i]",
+    "iframe[src*='amazon-adsystem' i]"
   ];
+
+  const TEXTO_PUBLICIDADE =
+    /^(advertisement|advertising|sponsored|sponsored content|publicidade|publicidade e anúncios|patrocinado|conteúdo patrocinado|anúncio|anuncios)$/i;
+
+  let preferencias = {
+    ...PREFERENCIAS_PADRAO
+  };
 
   let observadorDistracoes = null;
   let observadorMidia = null;
-  let timerPausaId = null;
-  let varreduraAgendada = false;
+  let timerVarredura = null;
+  let timerLeitura = null;
+  let filaLeitura = [];
 
-  let preferenciasAtuais = {};
+  function corpoPronto(callback) {
+    if (document.body) {
+      callback();
+      return;
+    }
 
-  // ===================================================
-  // DOMÍNIO
-  // ===================================================
-
-  function dominioAtual() {
-    return location.hostname.replace(
-      /^www\./,
-      ""
+    document.addEventListener(
+      "DOMContentLoaded",
+      callback,
+      {
+        once: true
+      }
     );
   }
 
-  // ===================================================
-  // IDENTIFICAR PUBLICIDADE
-  // ===================================================
+  function normalizarTexto(valor) {
+    return String(valor || "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
 
-  function ehPublicidade(elemento) {
-    if (!elemento || elemento.nodeType !== 1) {
+  function elementoVisivel(elemento) {
+    if (!(elemento instanceof Element)) {
       return false;
     }
 
-    let atual = elemento;
+    const estilo = getComputedStyle(elemento);
 
-    // Verifica o elemento e seus pais
-    for (let i = 0; i < 5 && atual; i++) {
-      const classe =
-        typeof atual.className === "string"
-          ? atual.className.toLowerCase()
-          : "";
+    if (
+      estilo.display === "none" ||
+      estilo.visibility === "hidden"
+    ) {
+      return false;
+    }
 
-      const id =
-        (
-          atual.id || ""
-        ).toLowerCase();
+    const rect =
+      elemento.getBoundingClientRect();
 
-      const aria =
-        (
-          atual.getAttribute("aria-label") || ""
-        ).toLowerCase();
+    return (
+      rect.width > 0 &&
+      rect.height > 0
+    );
+  }
 
-      const dados =
-        (
-          atual.getAttribute("data-ad") ||
-          atual.getAttribute("data-ad-slot") ||
-          atual.getAttribute("data-ad-unit") ||
-          atual.getAttribute("data-ad-format") ||
-          atual.getAttribute("data-advertisement") ||
-          ""
-        ).toLowerCase();
+  /*
+   * Evita esconder elementos gigantes que provavelmente
+   * representam a página inteira.
+   */
+  function tamanhoSeguro(elemento) {
+    const rect =
+      elemento.getBoundingClientRect();
 
+    const viewport =
+      Math.max(window.innerHeight, 1);
+
+    if (
+      rect.width <= 0 ||
+      rect.height <= 0
+    ) {
+      return false;
+    }
+
+    if (
+      rect.width >= window.innerWidth * 0.98 &&
+      rect.height >= viewport * 0.75
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /*
+   * PROTEÇÃO IMPORTANTE
+   *
+   * Impede que o bloqueador esconda:
+   * - body
+   * - html
+   * - main
+   * - article
+   * - nav
+   * - formulários
+   * - grandes blocos de texto
+   * - grandes blocos que possuem títulos
+   */
+  function elementoProtegido(elemento) {
+    if (!(elemento instanceof Element)) {
+      return true;
+    }
+
+    if (
+      elemento === document.documentElement ||
+      elemento === document.body
+    ) {
+      return true;
+    }
+
+    const tag =
+      elemento.tagName.toLowerCase();
+
+    if (
+      [
+        "html",
+        "body",
+        "main",
+        "article",
+        "nav",
+        "form"
+      ].includes(tag)
+    ) {
+      return true;
+    }
+
+    /*
+     * Elementos de texto individuais nunca são
+     * escondidos apenas por causa da proteção.
+     */
+    if (
+      elemento.matches(
+        "h1, h2, h3, h4, h5, h6, p, ul, ol, li, table, input, textarea, select, button"
+      )
+    ) {
+      return false;
+    }
+
+    /*
+     * Se for um bloco enorme dentro de uma notícia
+     * e tiver bastante texto, protege.
+     */
+    if (
+      elemento.closest("main, article") &&
+      !pareceContainerDeAnuncio(elemento)
+    ) {
       const texto =
-        `${classe} ${id} ${aria} ${dados}`;
+        normalizarTexto(
+          elemento.textContent
+        );
 
-      const palavrasPublicidade = [
-        "advertisement",
-        "advertising",
-        "publicidade",
-        "anuncio",
-        "anúncio",
-        "sponsored",
-        "patrocinado",
-        "adsbygoogle",
-        "ad-container",
-        "ad-wrapper",
-        "ad-banner",
-        "video-ads",
-        "ytp-ad",
-        "doubleclick",
-        "googlesyndication"
-      ];
-
-      if (
-        palavrasPublicidade.some(
-          palavra =>
-            texto.includes(palavra)
-        )
-      ) {
+      if (texto.length > 500) {
         return true;
       }
+    }
 
-      // Verifica origem de vídeos/iframes
-      if (
-        atual.tagName === "VIDEO" ||
-        atual.tagName === "IFRAME"
-      ) {
-        const src =
-          (
-            atual.currentSrc ||
-            atual.src ||
-            atual.getAttribute("src") ||
-            ""
-          ).toLowerCase();
+    /*
+     * Se possui títulos importantes, não esconde.
+     */
+    if (
+      elemento.querySelector(
+        "h1, h2, h3"
+      ) &&
+      !pareceContainerDeAnuncio(elemento)
+    ) {
+      return true;
+    }
 
-        if (
-          src.includes("doubleclick") ||
-          src.includes("googlesyndication") ||
-          src.includes("googleadservices") ||
-          src.includes("adservice") ||
-          src.includes("/ads/") ||
-          src.includes("advert")
-        ) {
-          return true;
-        }
-      }
+    const rect =
+      elemento.getBoundingClientRect();
 
-      atual = atual.parentElement;
+    const viewport =
+      Math.max(window.innerHeight, 1);
+
+    if (
+      rect.height > viewport * 0.85 &&
+      normalizarTexto(
+        elemento.textContent
+      ).length > 700
+    ) {
+      return true;
     }
 
     return false;
   }
 
-  // ===================================================
-  // APLICAR PREFERÊNCIAS
-  // ===================================================
-
-  function aplicarPreferencias(prefs = {}) {
-    preferenciasAtuais = {
-      ...preferenciasAtuais,
-      ...prefs
-    };
-
-    const raiz =
-      document.documentElement;
-
-    raiz.classList.toggle(
-      CLASSES.modoCalmo,
-      Boolean(
-        preferenciasAtuais.modoCalmo
-      )
-    );
-
-    raiz.classList.toggle(
-      CLASSES.fonteLegivel,
-      Boolean(
-        preferenciasAtuais.fonteLegivel
-      )
-    );
-
-    raiz.classList.toggle(
-      CLASSES.coresSuaves,
-      Boolean(
-        preferenciasAtuais.coresSuaves
-      )
-    );
-
-    // Distrações
-    if (
-      preferenciasAtuais.esconderDistracoes
-    ) {
-      ativarRemocaoDistracoes();
-    } else {
-      desativarRemocaoDistracoes();
+  function atributosDoElemento(elemento) {
+    if (!(elemento instanceof Element)) {
+      return "";
     }
 
-    // Mídias
-    if (
-      preferenciasAtuais.modoCalmo
-    ) {
-      pausarMidiasNormais();
-      ativarObservadorMidia();
-    } else {
-      desativarObservadorMidia();
-    }
+    return [
+      elemento.id,
+      elemento.className,
+      elemento.getAttribute("aria-label"),
+      elemento.getAttribute("title"),
+      elemento.getAttribute("role"),
+      elemento.getAttribute("data-testid"),
+      elemento.getAttribute("data-ad"),
+      elemento.getAttribute("data-ad-slot"),
+      elemento.getAttribute("data-ad-client"),
+      elemento.getAttribute("data-ad-format")
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
 
-    // Timer
-    configurarTimerPausa(
-      Number(
-        preferenciasAtuais.timerPausaMinutos
-      ) || 0
+  function pareceContainerDeAnuncio(elemento) {
+    const atributos =
+      atributosDoElemento(elemento);
+
+    return REGEX_PUBLICIDADE.test(
+      atributos
     );
   }
 
-  // ===================================================
-  // PAUSAR VÍDEOS NORMAIS
-  // ===================================================
+  function hostPublicitario(url) {
+    try {
+      const host =
+        new URL(
+          url,
+          location.href
+        ).hostname.toLowerCase();
 
-  function pausarMidia(elemento) {
-    if (!elemento) {
-      return;
+      return HOSTS_PUBLICIDADE.some(
+        (dominio) =>
+          host === dominio ||
+          host.endsWith(`.${dominio}`)
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  function temOrigemPublicitaria(elemento) {
+    if (!(elemento instanceof Element)) {
+      return false;
     }
 
-    // IMPORTANTE:
-    // anúncio nunca é pausado
-    if (ehPublicidade(elemento)) {
-      return;
+    for (
+      const atributo of [
+        "src",
+        "href",
+        "data-src",
+        "data-url"
+      ]
+    ) {
+      const valor =
+        elemento.getAttribute(
+          atributo
+        );
+
+      if (
+        valor &&
+        hostPublicitario(valor)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function temDescendentePublicitario(elemento) {
+    if (!(elemento instanceof Element)) {
+      return false;
     }
 
     try {
-      if (!elemento.paused) {
-        elemento.pause();
-      }
-    } catch (erro) {
-      // Ignora mídia que não pode ser pausada
+      return Boolean(
+        elemento.querySelector(
+          SELETORES_PUBLICIDADE.join(",")
+        )
+      );
+    } catch {
+      return false;
     }
   }
 
-  function pausarMidiasNormais() {
-    document
-      .querySelectorAll(
-        "video, audio"
+  /*
+   * Detecta publicidade olhando:
+   * - elemento
+   * - pais
+   * - origem do iframe
+   * - atributos
+   * - rótulos
+   */
+  function ehPublicidade(elemento) {
+    if (!(elemento instanceof Element)) {
+      return false;
+    }
+
+    let atual = elemento;
+    let nivel = 0;
+
+    while (
+      atual &&
+      atual !== document.body &&
+      nivel <= 6
+    ) {
+      if (
+        pareceContainerDeAnuncio(atual)
+      ) {
+        return true;
+      }
+
+      if (
+        temOrigemPublicitaria(atual)
+      ) {
+        return true;
+      }
+
+      const texto =
+        normalizarTexto(
+          atual.getAttribute(
+            "aria-label"
+          )
+        );
+
+      if (
+        TEXTO_PUBLICIDADE.test(
+          texto
+        )
+      ) {
+        return true;
+      }
+
+      atual =
+        atual.parentElement;
+
+      nivel += 1;
+    }
+
+    if (
+      elemento.matches(
+        "iframe, script, ins"
+      ) &&
+      temOrigemPublicitaria(
+        elemento
       )
-      .forEach(
-        pausarMidia
-      );
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
-  // ===================================================
-  // OBSERVADOR DE VÍDEOS
-  // ===================================================
+  /*
+   * Escolhe o elemento certo para esconder.
+   *
+   * Se for um iframe de anúncio dentro de um
+   * pequeno container de anúncio, esconde o container.
+   *
+   * Nunca sobe até body/main/article.
+   */
+  function alvoParaEsconder(elemento) {
+    if (!(elemento instanceof Element)) {
+      return null;
+    }
 
-  function ativarObservadorMidia() {
+    let alvo = elemento;
+    let atual = elemento;
+
+    for (
+      let i = 0;
+      i < 3 &&
+      atual &&
+      atual !== document.body;
+      i += 1
+    ) {
+      if (
+        pareceContainerDeAnuncio(
+          atual
+        ) &&
+        !elementoProtegido(
+          atual
+        ) &&
+        tamanhoSeguro(atual)
+      ) {
+        alvo = atual;
+      }
+
+      const pai =
+        atual.parentElement;
+
+      if (
+        !pai ||
+        pai === document.body
+      ) {
+        break;
+      }
+
+      const filhosVisiveis =
+        Array.from(
+          pai.children
+        ).filter(
+          elementoVisivel
+        );
+
+      /*
+       * Se o pai contém praticamente
+       * apenas o anúncio, podemos
+       * esconder o pai.
+       */
+      if (
+        filhosVisiveis.length <= 2 &&
+        filhosVisiveis.includes(atual) &&
+        pareceContainerDeAnuncio(pai) &&
+        !elementoProtegido(pai) &&
+        tamanhoSeguro(pai)
+      ) {
+        alvo = pai;
+      }
+
+      atual = pai;
+    }
+
     if (
-      observadorMidia ||
+      elementoProtegido(alvo)
+    ) {
+      return null;
+    }
+
+    if (
+      !tamanhoSeguro(alvo)
+    ) {
+      return null;
+    }
+
+    return alvo;
+  }
+
+  function esconderElemento(elemento) {
+    const alvo =
+      alvoParaEsconder(elemento);
+
+    if (!alvo) {
+      return;
+    }
+
+    alvo.classList.add(
+      CLASSES.escondido
+    );
+  }
+
+  /*
+   * Procura publicidade de várias maneiras.
+   */
+  function selecionarPossiveisAnuncios() {
+    const encontrados =
+      new Set();
+
+    try {
+      document
+        .querySelectorAll(
+          SELETORES_PUBLICIDADE.join(",")
+        )
+        .forEach(
+          (elemento) =>
+            encontrados.add(elemento)
+        );
+    } catch {
+      // Continua com as outras formas de detecção.
+    }
+
+    /*
+     * Procura elementos que possuam
+     * ID ou classe relacionados a publicidade.
+     */
+    document
+      .querySelectorAll(
+        "iframe, ins, [id], [class]"
+      )
+      .forEach(
+        (elemento) => {
+          if (
+            pareceContainerDeAnuncio(
+              elemento
+            ) ||
+            temOrigemPublicitaria(
+              elemento
+            )
+          ) {
+            encontrados.add(
+              elemento
+            );
+          }
+        }
+      );
+
+    /*
+     * Procura rótulos como
+     * "Advertisement" e "Sponsored".
+     */
+    document
+      .querySelectorAll(
+        "[aria-label]"
+      )
+      .forEach(
+        (elemento) => {
+          const label =
+            normalizarTexto(
+              elemento.getAttribute(
+                "aria-label"
+              )
+            );
+
+          if (
+            TEXTO_PUBLICIDADE.test(
+              label
+            )
+          ) {
+            encontrados.add(
+              elemento
+            );
+          }
+        }
+      );
+
+    return encontrados;
+  }
+
+  function esconderDistracoesAgora() {
+    if (
+      !preferencias.esconderDistracoes ||
       !document.body
     ) {
       return;
     }
 
-    observadorMidia =
-      new MutationObserver(
-        (mutacoes) => {
-          if (
-            !preferenciasAtuais.modoCalmo
-          ) {
-            return;
-          }
-
-          for (const mutacao of mutacoes) {
-            for (
-              const node of mutacao.addedNodes
-            ) {
-              if (
-                node.nodeType !== 1
-              ) {
-                continue;
-              }
-
-              if (
-                node.matches?.(
-                  "video, audio"
-                )
-              ) {
-                pausarMidia(node);
-              }
-
-              node
-                .querySelectorAll?.(
-                  "video, audio"
-                )
-                .forEach(
-                  pausarMidia
-                );
-            }
-          }
-        }
+    selecionarPossiveisAnuncios()
+      .forEach(
+        esconderElemento
       );
-
-    observadorMidia.observe(
-      document.body,
-      {
-        childList: true,
-        subtree: true
-      }
-    );
   }
 
-  function desativarObservadorMidia() {
-    if (
-      observadorMidia
-    ) {
-      observadorMidia.disconnect();
-      observadorMidia = null;
-    }
-  }
-
-  // ===================================================
-  // ESCONDER DISTRAÇÕES
-  // ===================================================
-
-  function esconderDistracoesAgora() {
-    if (
-      !preferenciasAtuais.esconderDistracoes
-    ) {
-      return;
-    }
-
-    SELETORES_DISTRACAO.forEach(
-      (seletor) => {
-        try {
-          document
-            .querySelectorAll(seletor)
-            .forEach(
-              (elemento) => {
-                const rect =
-                  elemento.getBoundingClientRect();
-
-                if (
-                  rect.width > 80 ||
-                  rect.height > 40
-                ) {
-                  elemento.classList.add(
-                    CLASSES.escondido
-                  );
-                }
-              }
-            );
-        } catch (erro) {
-          // Seletor incompatível é ignorado
-        }
-      }
-    );
-
-    // Elementos explicitamente marcados
+  function restaurarDistracoes() {
     document
       .querySelectorAll(
-        "[aria-label], [data-testid], [data-ad]"
+        `.${CLASSES.escondido}`
       )
       .forEach(
         (elemento) => {
-          const dados =
-            `${elemento.getAttribute(
-              "aria-label"
-            ) || ""} ${
-              elemento.getAttribute(
-                "data-testid"
-              ) || ""
-            } ${
-              elemento.getAttribute(
-                "data-ad"
-              ) || ""
-            }`.toLowerCase();
-
-          if (
-            dados.includes("publicidade") ||
-            dados.includes("advertisement") ||
-            dados.includes("anúncio") ||
-            dados.includes("anuncio") ||
-            dados.includes("sponsored") ||
-            dados.includes("patrocinado")
-          ) {
-            elemento.classList.add(
-              CLASSES.escondido
-            );
-          }
+          elemento.classList.remove(
+            CLASSES.escondido
+          );
         }
       );
   }
 
-  // ===================================================
-  // AGENDAR VARREDURA
-  // ===================================================
+  /*
+   * Evita executar centenas de varreduras
+   * seguidas quando um site atualiza o DOM.
+   */
+  function programarVarredura() {
+    clearTimeout(
+      timerVarredura
+    );
 
-  function agendarVarreduraDistracoes() {
-    if (varreduraAgendada) {
-      return;
-    }
+    timerVarredura =
+      setTimeout(() => {
+        esconderDistracoesAgora();
 
-    varreduraAgendada = true;
-
-    requestAnimationFrame(() => {
-      varreduraAgendada = false;
-
-      esconderDistracoesAgora();
-    });
+        if (
+          preferencias.modoCalmo
+        ) {
+          pausarMidiasNormais();
+        }
+      }, 120);
   }
 
-  // ===================================================
-  // ATIVAR REMOÇÃO
-  // ===================================================
-
-  function ativarRemocaoDistracoes() {
-    esconderDistracoesAgora();
-
+  function iniciarObservadorDistracoes() {
     if (
       observadorDistracoes ||
       !document.body
@@ -517,8 +671,29 @@
 
     observadorDistracoes =
       new MutationObserver(
-        () => {
-          agendarVarreduraDistracoes();
+        (mutacoes) => {
+          if (
+            !preferencias.esconderDistracoes &&
+            !preferencias.modoCalmo
+          ) {
+            return;
+          }
+
+          const houveMudanca =
+            mutacoes.some(
+              (mutacao) =>
+                Array.from(
+                  mutacao.addedNodes
+                ).some(
+                  (node) =>
+                    node.nodeType ===
+                    Node.ELEMENT_NODE
+                )
+            );
+
+          if (houveMudanca) {
+            programarVarredura();
+          }
         }
       );
 
@@ -531,41 +706,183 @@
     );
   }
 
-  // ===================================================
-  // DESATIVAR REMOÇÃO
-  // ===================================================
-
-  function desativarRemocaoDistracoes() {
+  function pararObservadorDistracoes() {
     if (
-      observadorDistracoes
+      !observadorDistracoes
     ) {
-      observadorDistracoes.disconnect();
-      observadorDistracoes = null;
+      return;
+    }
+
+    observadorDistracoes.disconnect();
+    observadorDistracoes = null;
+  }
+
+  /*
+   * Pausa vídeos e áudios.
+   *
+   * Isso também pega publicidade em vídeo
+   * quando o elemento está acessível ao content script.
+   */
+  function pausarMidia(midia) {
+    if (
+      !(midia instanceof HTMLMediaElement)
+    ) {
+      return;
+    }
+
+    try {
+      midia.autoplay = false;
+      midia.pause();
+    } catch {
+      // Alguns players controlados pelo site
+      // podem rejeitar alterações.
+    }
+  }
+
+  function pausarMidiasNormais() {
+    if (
+      !preferencias.modoCalmo
+    ) {
+      return;
     }
 
     document
       .querySelectorAll(
-        "." + CLASSES.escondido
+        "video, audio"
       )
       .forEach(
-        (elemento) => {
-          elemento.classList.remove(
-            CLASSES.escondido
-          );
-        }
+        pausarMidia
       );
   }
 
-  // ===================================================
-  // LEITURA EM VOZ ALTA
-  // ===================================================
-
-  function lerEmVozAlta(texto) {
-    if (!texto) {
+  function iniciarObservadorMidia() {
+    if (
+      observadorMidia ||
+      !document.body
+    ) {
       return;
     }
 
+    observadorMidia =
+      new MutationObserver(
+        (mutacoes) => {
+          if (
+            !preferencias.modoCalmo
+          ) {
+            return;
+          }
+
+          mutacoes.forEach(
+            (mutacao) => {
+              mutacao.addedNodes.forEach(
+                (node) => {
+                  if (
+                    !(node instanceof Element)
+                  ) {
+                    return;
+                  }
+
+                  if (
+                    node.matches(
+                      "video, audio"
+                    )
+                  ) {
+                    pausarMidia(node);
+                  }
+
+                  node
+                    .querySelectorAll?.(
+                      "video, audio"
+                    )
+                    .forEach(
+                      pausarMidia
+                    );
+                }
+              );
+            }
+          );
+        }
+      );
+
+    observadorMidia.observe(
+      document.body,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+  }
+
+  function aplicarClasses() {
+    const html =
+      document.documentElement;
+
+    if (!html) {
+      return;
+    }
+
+    html.classList.toggle(
+      CLASSES.modoCalmo,
+      Boolean(
+        preferencias.modoCalmo
+      )
+    );
+
+    html.classList.toggle(
+      CLASSES.fonteLegivel,
+      Boolean(
+        preferencias.fonteLegivel
+      )
+    );
+
+    html.classList.toggle(
+      CLASSES.coresSuaves,
+      Boolean(
+        preferencias.coresSuaves
+      )
+    );
+  }
+
+  function aplicarPreferencias(
+    novasPreferencias
+  ) {
+    preferencias = {
+      ...preferencias,
+      ...novasPreferencias
+    };
+
+    aplicarClasses();
+
     if (
+      preferencias.esconderDistracoes
+    ) {
+      iniciarObservadorDistracoes();
+      programarVarredura();
+    } else {
+      restaurarDistracoes();
+      pararObservadorDistracoes();
+    }
+
+    if (
+      preferencias.modoCalmo
+    ) {
+      iniciarObservadorDistracoes();
+      iniciarObservadorMidia();
+
+      pausarMidiasNormais();
+      programarVarredura();
+    }
+  }
+
+  /*
+   * Leitura em voz alta.
+   */
+  function falarTexto(texto) {
+    const limpo =
+      normalizarTexto(texto);
+
+    if (
+      !limpo ||
       !("speechSynthesis" in window)
     ) {
       return;
@@ -573,152 +890,115 @@
 
     window.speechSynthesis.cancel();
 
-    const fala =
-      new SpeechSynthesisUtterance(
-        texto
-      );
+    filaLeitura = [];
 
-    fala.lang = "pt-BR";
-    fala.rate = 0.95;
-    fala.pitch = 1;
+    const limite = 3500;
 
-    window.speechSynthesis.speak(
-      fala
-    );
-  }
-
-  // ===================================================
-  // TIMER
-  // ===================================================
-
-  function configurarTimerPausa(
-    minutos
-  ) {
-    if (timerPausaId) {
-      clearInterval(
-        timerPausaId
-      );
-
-      timerPausaId = null;
-    }
-
-    if (
-      !minutos ||
-      minutos <= 0
+    for (
+      let inicio = 0;
+      inicio < limpo.length;
+      inicio += limite
     ) {
-      return;
+      filaLeitura.push(
+        limpo.slice(
+          inicio,
+          inicio + limite
+        )
+      );
     }
 
-    timerPausaId =
-      setInterval(
-        mostrarAvisoPausa,
-        minutos *
-          60 *
-          1000
-      );
-  }
+    filaLeitura.forEach(
+      (parte) => {
+        const fala =
+          new SpeechSynthesisUtterance(
+            parte
+          );
 
-  function mostrarAvisoPausa() {
-    const antigo =
-      document.getElementById(
-        "fc-aviso-pausa"
-      );
+        fala.lang =
+          document.documentElement
+            .lang ||
+          "pt-BR";
 
-    if (antigo) {
-      antigo.remove();
-    }
+        fala.rate = 0.95;
+        fala.pitch = 1;
 
-    const aviso =
-      document.createElement(
-        "div"
-      );
-
-    aviso.id =
-      "fc-aviso-pausa";
-
-    aviso.textContent =
-      "Hora de fazer uma pausa curta.";
-
-    document.body.appendChild(
-      aviso
-    );
-
-    requestAnimationFrame(() => {
-      aviso.classList.add(
-        "fc-aviso-visivel"
-      );
-    });
-
-    setTimeout(() => {
-      aviso.classList.remove(
-        "fc-aviso-visivel"
-      );
-
-      setTimeout(() => {
-        aviso.remove();
-      }, 400);
-    }, 6000);
-  }
-
-  // ===================================================
-  // CARREGAR PREFERÊNCIAS
-  // ===================================================
-
-  function carregarPreferencias() {
-    const global = [
-      "modoCalmo",
-      "fonteLegivel",
-      "coresSuaves",
-      "esconderDistracoes",
-      "timerPausaMinutos"
-    ];
-
-    const dominio =
-      dominioAtual();
-
-    const chavesDominio =
-      global.map(
-        chave =>
-          `${dominio}:${chave}`
-      );
-
-    chrome.storage.sync.get(
-      [
-        ...global,
-        ...chavesDominio
-      ],
-      (dados) => {
-        const prefsFinal = {};
-
-        global.forEach(
-          (chave) => {
-            const valorDominio =
-              dados[
-                `${dominio}:${chave}`
-              ];
-
-            prefsFinal[chave] =
-              valorDominio !==
-              undefined
-                ? valorDominio
-                : dados[chave];
-          }
-        );
-
-        aplicarPreferencias(
-          prefsFinal
+        window.speechSynthesis.speak(
+          fala
         );
       }
     );
   }
 
-  // ===================================================
-  // MENSAGENS
-  // ===================================================
+  /*
+   * Timer.
+   */
+  function iniciarTimer(
+    segundos
+  ) {
+    clearTimeout(
+      timerLeitura
+    );
+
+    document.documentElement
+      .classList.remove(
+        "fc-timer-finalizado"
+      );
+
+    const total =
+      Number(segundos);
+
+    if (
+      !Number.isFinite(total) ||
+      total <= 0
+    ) {
+      return;
+    }
+
+    timerLeitura =
+      setTimeout(() => {
+        document.documentElement
+          .classList.add(
+            "fc-timer-finalizado"
+          );
+      }, total * 1000);
+  }
+
+  /*
+   * Se qualquer vídeo/áudio começar a tocar
+   * enquanto o Modo Calmo estiver ativo,
+   * ele será pausado novamente.
+   */
+  document.addEventListener(
+    "play",
+    (evento) => {
+      if (
+        !preferencias.modoCalmo
+      ) {
+        return;
+      }
+
+      if (
+        evento.target instanceof
+        HTMLMediaElement
+      ) {
+        pausarMidia(
+          evento.target
+        );
+      }
+    },
+    true
+  );
 
   chrome.runtime.onMessage.addListener(
-    (mensagem) => {
-      if (!mensagem) {
+    (
+      mensagem,
+      _remetente,
+      responder
+    ) => {
+      if (
+        !mensagem ||
+        !mensagem.tipo
+      ) {
         return;
       }
 
@@ -729,22 +1009,56 @@
         aplicarPreferencias(
           mensagem.prefs || {}
         );
+
+        responder?.({
+          ok: true
+        });
+
+        return;
       }
 
       if (
         mensagem.tipo ===
         "LER_EM_VOZ_ALTA"
       ) {
-        lerEmVozAlta(
-          mensagem.texto
+        falarTexto(
+          mensagem.texto || ""
         );
+
+        responder?.({
+          ok: true
+        });
+
+        return;
+      }
+
+      if (
+        mensagem.tipo ===
+        "INICIAR_TIMER"
+      ) {
+        iniciarTimer(
+          mensagem.segundos
+        );
+
+        responder?.({
+          ok: true
+        });
       }
     }
   );
 
-  // ===================================================
-  // INICIALIZAÇÃO
-  // ===================================================
+  corpoPronto(() => {
+    iniciarObservadorDistracoes();
+    iniciarObservadorMidia();
 
-  carregarPreferencias();
+    chrome.storage.sync.get(
+      PREFERENCIAS_PADRAO,
+      (prefs) => {
+        aplicarPreferencias(
+          prefs ||
+            PREFERENCIAS_PADRAO
+        );
+      }
+    );
+  });
 })();
