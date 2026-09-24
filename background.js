@@ -1,46 +1,42 @@
-
-// =====================================================
-// FOCO CALMO - BACKGROUND
-// =====================================================
-
 const MENU_ID = "fc-ler-em-voz-alta";
 
-// =====================================================
-// INSTALAÇÃO
-// =====================================================
-
-chrome.runtime.onInstalled.addListener(() => {
+function criarMenu() {
   chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
-      id: MENU_ID,
-      title: "Ler em voz alta",
-      contexts: ["selection"]
-    });
-  });
-});
+    void chrome.runtime.lastError;
 
-// =====================================================
-// ENVIAR MENSAGEM
-// =====================================================
-
-function enviarMensagem(tabId, mensagem) {
-  if (!tabId) {
-    return;
-  }
-
-  chrome.tabs.sendMessage(tabId, mensagem, () => {
-    if (chrome.runtime.lastError) {
-      console.log(
-        "Content script indisponível:",
-        chrome.runtime.lastError.message
-      );
-    }
+    chrome.contextMenus.create(
+      {
+        id: MENU_ID,
+        title: "Ler em voz alta",
+        contexts: ["selection"]
+      },
+      () => void chrome.runtime.lastError
+    );
   });
 }
 
-// =====================================================
-// ATALHO CTRL + SHIFT + C
-// =====================================================
+chrome.runtime.onInstalled.addListener(criarMenu);
+chrome.runtime.onStartup.addListener(criarMenu);
+
+function podeEnviarParaAba(aba) {
+  return Boolean(
+    aba &&
+    aba.id &&
+    /^https?:\/\//i.test(aba.url || "")
+  );
+}
+
+function enviarMensagem(tabId, mensagem) {
+  if (!tabId) return;
+
+  chrome.tabs.sendMessage(
+    tabId,
+    mensagem,
+    () => {
+      void chrome.runtime.lastError;
+    }
+  );
+}
 
 chrome.commands.onCommand.addListener((comando) => {
   if (comando !== "toggle-modo-calmo") {
@@ -55,12 +51,14 @@ chrome.commands.onCommand.addListener((comando) => {
     (abas) => {
       const aba = abas[0];
 
-      if (!aba || !aba.id) {
+      if (!podeEnviarParaAba(aba)) {
         return;
       }
 
       chrome.storage.sync.get(
-        ["modoCalmo"],
+        {
+          modoCalmo: false
+        },
         (prefs) => {
           const novoValor =
             !Boolean(prefs.modoCalmo);
@@ -73,11 +71,9 @@ chrome.commands.onCommand.addListener((comando) => {
               enviarMensagem(
                 aba.id,
                 {
-                  tipo:
-                    "ATUALIZAR_PREFERENCIAS",
+                  tipo: "ATUALIZAR_PREFERENCIAS",
                   prefs: {
-                    modoCalmo:
-                      novoValor
+                    modoCalmo: novoValor
                   }
                 }
               );
@@ -89,17 +85,12 @@ chrome.commands.onCommand.addListener((comando) => {
   );
 });
 
-// =====================================================
-// MENU LER EM VOZ ALTA
-// =====================================================
-
 chrome.contextMenus.onClicked.addListener(
   (info, aba) => {
     if (
       info.menuItemId !== MENU_ID ||
       !info.selectionText ||
-      !aba ||
-      !aba.id
+      !podeEnviarParaAba(aba)
     ) {
       return;
     }
@@ -108,7 +99,7 @@ chrome.contextMenus.onClicked.addListener(
       aba.id,
       {
         tipo: "LER_EM_VOZ_ALTA",
-        texto: info.selectionText
+        texto: info.selectionText.trim()
       }
     );
   }
