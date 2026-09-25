@@ -10,7 +10,9 @@ function criarMenu() {
         title: "Ler em voz alta",
         contexts: ["selection"]
       },
-      () => void chrome.runtime.lastError
+      () => {
+        void chrome.runtime.lastError;
+      }
     );
   });
 }
@@ -60,23 +62,19 @@ chrome.commands.onCommand.addListener((comando) => {
           modoCalmo: false
         },
         (prefs) => {
-          const novoValor =
-            !Boolean(prefs.modoCalmo);
+          const novoValor = !Boolean(prefs.modoCalmo);
 
           chrome.storage.sync.set(
             {
               modoCalmo: novoValor
             },
             () => {
-              enviarMensagem(
-                aba.id,
-                {
-                  tipo: "ATUALIZAR_PREFERENCIAS",
-                  prefs: {
-                    modoCalmo: novoValor
-                  }
+              enviarMensagem(aba.id, {
+                tipo: "ATUALIZAR_PREFERENCIAS",
+                prefs: {
+                  modoCalmo: novoValor
                 }
-              );
+              });
             }
           );
         }
@@ -85,22 +83,17 @@ chrome.commands.onCommand.addListener((comando) => {
   );
 });
 
-chrome.contextMenus.onClicked.addListener(
-  (info, aba) => {
-    if (
-      info.menuItemId !== MENU_ID ||
-      !info.selectionText ||
-      !podeEnviarParaAba(aba)
-    ) {
-      return;
-    }
-
-    enviarMensagem(
-      aba.id,
-      {
-        tipo: "LER_EM_VOZ_ALTA",
-        texto: info.selectionText.trim()
-      }
-    );
+chrome.contextMenus.onClicked.addListener((info, aba) => {
+  if (
+    info.menuItemId !== MENU_ID ||
+    !info.selectionText ||
+    !podeEnviarParaAba(aba)
+  ) {
+    return;
   }
-);
+
+  enviarMensagem(aba.id, {
+    tipo: "LER_EM_VOZ_ALTA",
+    texto: info.selectionText.trim()
+  });
+});
