@@ -1,16 +1,48 @@
-/* Foco Calmo 4.1 */
+/* =====================================================
+   FOCO CALMO 5.1
+   Acessibilidade, legibilidade e redução de estímulos
+   ===================================================== */
 
-/* Elementos identificados como publicidade */
+html {
+  --fc-fonte:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  --fc-fundo-claro: #f4f3ef;
+  --fc-texto-claro: #262626;
+  --fc-titulo-claro: #30343b;
+  --fc-link-claro: #285a75;
+
+  --fc-fundo-escuro: #202124;
+  --fc-texto-escuro: #eeeeee;
+  --fc-titulo-escuro: #f5f5f5;
+  --fc-link-escuro: #b9d8e8;
+
+  --fc-borda: #c9c9c4;
+
+  box-sizing: border-box;
+}
+
+html *,
+html *::before,
+html *::after {
+  box-sizing: inherit;
+}
+
+/* =====================================================
+   ELEMENTOS ESCONDIDOS
+   ===================================================== */
+
 .fc-escondido {
   display: none !important;
   visibility: hidden !important;
-  opacity: 0 !important;
   pointer-events: none !important;
 }
 
-/* =========================
+/* =====================================================
    MODO CALMO
-   ========================= */
+   ===================================================== */
 
 html.fc-modo-calmo *,
 html.fc-modo-calmo *::before,
@@ -19,7 +51,7 @@ html.fc-modo-calmo *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
-  caret-color: currentColor !important;
+  caret-color: auto !important;
 }
 
 html.fc-modo-calmo video,
@@ -27,189 +59,237 @@ html.fc-modo-calmo audio {
   animation: none !important;
 }
 
-/* =========================
+/* =====================================================
    FONTE LEGÍVEL
-   ========================= */
+   ===================================================== */
 
-html.fc-fonte-legivel body,
-html.fc-fonte-legivel body p,
-html.fc-fonte-legivel body li,
-html.fc-fonte-legivel body dt,
-html.fc-fonte-legivel body dd,
-html.fc-fonte-legivel body h1,
-html.fc-fonte-legivel body h2,
-html.fc-fonte-legivel body h3,
-html.fc-fonte-legivel body h4,
-html.fc-fonte-legivel body h5,
-html.fc-fonte-legivel body h6,
-html.fc-fonte-legivel body label,
-html.fc-fonte-legivel body button,
-html.fc-fonte-legivel body input,
-html.fc-fonte-legivel body textarea,
-html.fc-fonte-legivel body select,
-html.fc-fonte-legivel body blockquote,
-html.fc-fonte-legivel body figcaption {
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif !important;
+html.fc-fonte-legivel {
+  font-family: var(--fc-fonte) !important;
+  font-size: 108% !important;
 }
 
-html.fc-fonte-legivel body p,
-html.fc-fonte-legivel body li,
-html.fc-fonte-legivel body blockquote {
-  line-height: 1.65 !important;
+html.fc-fonte-legivel body {
+  font-family: var(--fc-fonte) !important;
+  line-height: 1.6 !important;
   letter-spacing: 0.01em !important;
 }
 
-/* =========================
-   CORES SUAVES
-   ========================= */
+html.fc-fonte-legivel
+  :where(
+    p,
+    li,
+    td,
+    th,
+    dd,
+    dt,
+    label,
+    blockquote,
+    figcaption,
+    input,
+    textarea,
+    select,
+    button
+  ) {
+  font-family: var(--fc-fonte) !important;
+}
+
+html.fc-fonte-legivel
+  :where(
+    p,
+    li,
+    td,
+    th,
+    dd,
+    dt,
+    blockquote,
+    figcaption
+  ) {
+  font-size: 1.04em !important;
+  line-height: 1.65 !important;
+}
+
+html.fc-fonte-legivel
+  :where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--fc-fonte) !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0 !important;
+}
+
+/* =====================================================
+   CORES SUAVES — BASE
+   ===================================================== */
+
+/*
+  A ideia aqui não é simplesmente trocar tudo por branco.
+
+  Primeiro reduzimos a saturação geral da página. Isso diminui
+  cores muito fortes de fundos, banners, botões e elementos
+  decorativos.
+
+  Como um filtro CSS aplicado num elemento afeta visualmente
+  TUDO dentro dele (inclusive imagens e vídeos), compensamos o
+  efeito diretamente em mídia com um filtro inverso, para que
+  fotos e vídeos continuem com as cores originais.
+*/
 
 html.fc-cores-suaves {
-  --fc-bg: #f3f1eb;
-  --fc-text: #262626;
-  --fc-heading: #303640;
-  --fc-link: #245a78;
-  --fc-visited: #514d78;
-  --fc-border: #c9c7c0;
+  filter: saturate(45%);
+  background: var(--fc-fundo-claro) !important;
 }
 
-html.fc-cores-suaves body {
-  background-color:
-    var(--fc-bg) !important;
-
-  color:
-    var(--fc-text) !important;
+html.fc-cores-suaves
+  :where(img, video, picture, canvas, svg, iframe) {
+  filter: saturate(222%) !important;
 }
 
-html.fc-cores-suaves body p,
-html.fc-cores-suaves body li,
-html.fc-cores-suaves body dt,
-html.fc-cores-suaves body dd,
-html.fc-cores-suaves body blockquote,
-html.fc-cores-suaves body figcaption,
-html.fc-cores-suaves body caption {
-  color:
-    var(--fc-text) !important;
+/*
+  Retira gradientes muito chamativos.
+*/
+
+html.fc-cores-suaves
+  :where(
+    body,
+    main,
+    article,
+    section,
+    aside,
+    header,
+    footer,
+    nav
+  ) {
+  background-image: none !important;
 }
 
-html.fc-cores-suaves body h1,
-html.fc-cores-suaves body h2,
-html.fc-cores-suaves body h3,
-html.fc-cores-suaves body h4,
-html.fc-cores-suaves body h5,
-html.fc-cores-suaves body h6 {
-  color:
-    var(--fc-heading) !important;
+/*
+  Página clara.
+*/
+
+html.fc-cores-suaves[data-fc-tema="claro"] {
+  background: var(--fc-fundo-claro) !important;
 }
 
-html.fc-cores-suaves body a {
-  color:
-    var(--fc-link) !important;
+html.fc-cores-suaves[data-fc-tema="claro"] body {
+  background-color: var(--fc-fundo-claro) !important;
+  color: var(--fc-texto-claro) !important;
 }
 
-html.fc-cores-suaves body a:visited {
-  color:
-    var(--fc-visited) !important;
+html.fc-cores-suaves[data-fc-tema="claro"]
+  :where(
+    main,
+    article,
+    section,
+    aside
+  ) {
+  border-color: var(--fc-borda) !important;
 }
 
-html.fc-cores-suaves body input,
-html.fc-cores-suaves body textarea,
-html.fc-cores-suaves body select {
-  color:
-    var(--fc-text) !important;
-
-  background-color:
-    #ffffff !important;
-
-  border-color:
-    var(--fc-border) !important;
+html.fc-cores-suaves[data-fc-tema="claro"]
+  :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--fc-titulo-claro) !important;
 }
 
-html.fc-cores-suaves body button {
-  color: #202020 !important;
-  border-color:
-    var(--fc-border) !important;
+html.fc-cores-suaves[data-fc-tema="claro"]
+  a {
+  color: var(--fc-link-claro) !important;
 }
 
-/* =========================
-   FOCO PELO TECLADO
-   ========================= */
+/*
+  Página escura.
 
-html.fc-modo-calmo :focus-visible,
-html.fc-fonte-legivel :focus-visible,
-html.fc-cores-suaves :focus-visible {
-  outline:
-    3px solid #245a78 !important;
+  Em vez de forçar branco puro, usamos um cinza escuro
+  neutro e confortável.
+*/
 
-  outline-offset:
-    2px !important;
+html.fc-cores-suaves[data-fc-tema="escuro"] {
+  background: var(--fc-fundo-escuro) !important;
 }
 
-/* =========================
-   TIMER
-   ========================= */
-
-html.fc-timer-finalizado::before {
-  content:
-    "Tempo de foco concluído";
-
-  position:
-    fixed !important;
-
-  left:
-    50% !important;
-
-  bottom:
-    18px !important;
-
-  transform:
-    translateX(-50%) !important;
-
-  z-index:
-    2147483647 !important;
-
-  padding:
-    10px 14px !important;
-
-  border:
-    1px solid #c9c7c0 !important;
-
-  border-radius:
-    10px !important;
-
-  background:
-    #ffffff !important;
-
-  color:
-    #262626 !important;
-
-  font:
-    600 14px Arial, Helvetica, sans-serif !important;
-
-  box-shadow:
-    0 4px 18px rgba(0, 0, 0, 0.15) !important;
+html.fc-cores-suaves[data-fc-tema="escuro"] body {
+  background-color: var(--fc-fundo-escuro) !important;
+  color: var(--fc-texto-escuro) !important;
 }
 
-/* =========================
+html.fc-cores-suaves[data-fc-tema="escuro"]
+  :where(
+    main,
+    article,
+    section,
+    aside,
+    header,
+    footer
+  ) {
+  background-color: #252629 !important;
+  border-color: #48494d !important;
+}
+
+html.fc-cores-suaves[data-fc-tema="escuro"]
+  :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--fc-titulo-escuro) !important;
+}
+
+html.fc-cores-suaves[data-fc-tema="escuro"]
+  a {
+  color: var(--fc-link-escuro) !important;
+}
+
+/*
+  Elementos que costumam ser excessivamente coloridos.
+  Mantemos imagens e vídeos intactos para não prejudicar
+  conteúdo importante.
+*/
+
+html.fc-cores-suaves
+  :where(
+    button,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"]
+  ) {
+  filter: saturate(55%) !important;
+}
+
+/*
+  Remove fundos extremamente chamativos de alguns
+  elementos de interface sem mexer em imagens.
+*/
+
+html.fc-cores-suaves
+  :where(
+    blockquote,
+    pre,
+    code,
+    table,
+    th,
+    td
+  ) {
+  border-color: var(--fc-borda) !important;
+}
+
+/* =====================================================
+   FOCO E NAVEGAÇÃO POR TECLADO
+   ===================================================== */
+
+html.fc-modo-calmo
+  :where(
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    [tabindex]
+  ):focus-visible {
+  outline: 3px solid currentColor !important;
+  outline-offset: 3px !important;
+}
+
+/* =====================================================
    REDUÇÃO DE MOVIMENTO
-   ========================= */
+   ===================================================== */
 
 @media (prefers-reduced-motion: reduce) {
-  html.fc-modo-calmo *,
-  html.fc-modo-calmo *::before,
-  html.fc-modo-calmo *::after {
-    animation-duration:
-      0.001ms !important;
-
-    animation-iteration-count:
-      1 !important;
-
-    transition-duration:
-      0.001ms !important;
-
-    scroll-behavior:
-      auto !important;
+  html * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
   }
 }
