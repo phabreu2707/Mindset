@@ -1,12 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Foco Calmo — Acessibilidade",
-  "version": "4.1.0",
-  "description": "Ferramenta de acessibilidade para tornar páginas mais calmas, legíveis e com menos distrações.",
+  "version": "5.1.0",
+  "description": "Ferramenta de acessibilidade para tornar páginas mais calmas, legíveis, organizadas e com menos distrações.",
   "permissions": [
     "storage",
     "activeTab",
-    "scripting",
     "contextMenus"
   ],
   "host_permissions": [
@@ -24,7 +23,7 @@
       "suggested_key": {
         "default": "Ctrl+Shift+C"
       },
-      "description": "Ativar ou desativar o modo calmo"
+      "description": "Ativar ou desativar o Modo Calmo"
     }
   },
   "content_scripts": [
