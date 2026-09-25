@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
 
@@ -17,258 +16,350 @@
     }
 
     body {
-      width: 300px;
+      width: 340px;
       margin: 0;
-      padding: 16px;
-
-      background: #f4f2ed;
-      color: #262626;
+      padding: 18px;
 
       font-family:
         Arial,
         Helvetica,
         sans-serif;
+
+      background: #f4f5f7;
+      color: #252525;
     }
 
-    h1 {
-      margin:
-        0 0 4px;
+    .cabecalho {
+      display: flex;
+      align-items: center;
+      gap: 12px;
 
-      font-size:
-        18px;
+      margin-bottom: 18px;
+    }
+
+    .icone {
+      width: 44px;
+      height: 44px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 14px;
+
+      background: #e4e8ec;
+
+      font-size: 23px;
+    }
+
+    .titulo-area h1 {
+      margin: 0;
+
+      font-size: 20px;
+      line-height: 1.2;
+
+      color: #20242a;
+    }
+
+    .titulo-area p {
+      margin: 4px 0 0;
+
+      font-size: 12px;
+      color: #68717b;
     }
 
     .descricao {
-      margin:
-        0 0 16px;
+      margin: 0 0 16px;
 
-      color:
-        #555;
+      font-size: 13px;
+      line-height: 1.5;
 
-      font-size:
-        12px;
+      color: #555e68;
+    }
 
-      line-height:
-        1.4;
+    .secao-titulo {
+      margin: 18px 0 8px;
+
+      font-size: 12px;
+      font-weight: bold;
+
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+
+      color: #68717b;
     }
 
     .opcao {
-      display:
-        flex;
+      display: flex;
+      align-items: center;
+      gap: 12px;
 
-      align-items:
-        center;
+      padding: 12px;
 
-      gap:
-        10px;
+      margin-bottom: 8px;
 
-      padding:
-        9px 0;
+      border: 1px solid #dde1e5;
+      border-radius: 13px;
 
-      font-size:
-        14px;
+      background: #ffffff;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease;
     }
 
-    .opcao input {
-      width:
-        18px;
-
-      height:
-        18px;
+    .opcao:hover {
+      transform: translateY(-1px);
+      border-color: #c6ccd2;
+      background: #fafafa;
     }
 
-    .grupo {
-      margin-top:
-        14px;
-
-      padding-top:
-        12px;
-
-      border-top:
-        1px solid #d5d2ca;
+    .opcao.ativa {
+      border-color: #aeb8c1;
+      background: #f1f3f5;
     }
 
-    .grupo strong {
-      display:
-        block;
+    .icone-opcao {
+      width: 36px;
+      height: 36px;
 
-      margin-bottom:
-        8px;
+      flex-shrink: 0;
 
-      font-size:
-        13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 10px;
+
+      background: #edf0f2;
+
+      font-size: 17px;
     }
 
-    .linha-timer {
-      display:
-        flex;
-
-      gap:
-        8px;
+    .texto-opcao {
+      flex: 1;
+      min-width: 0;
     }
 
-    select,
-    button {
-      min-height:
-        36px;
+    .nome-opcao {
+      display: block;
 
-      border:
-        1px solid #c8c5bd;
+      margin-bottom: 3px;
 
-      border-radius:
-        8px;
+      font-size: 14px;
+      font-weight: 700;
 
-      background:
-        #fff;
-
-      color:
-        #262626;
-
-      font-family:
-        inherit;
+      color: #292e34;
     }
 
-    select {
-      flex:
-        1;
+    .descricao-opcao {
+      display: block;
 
-      padding:
-        0 8px;
+      font-size: 11px;
+      line-height: 1.35;
+
+      color: #727b84;
     }
 
-    button {
-      padding:
-        0 12px;
+    .switch {
+      position: relative;
 
-      cursor:
-        pointer;
+      width: 42px;
+      height: 24px;
+
+      flex-shrink: 0;
     }
 
-    button:hover {
-      background:
-        #eeeae2;
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
     }
 
-    #status {
-      min-height:
-        18px;
+    .slider {
+      position: absolute;
+      inset: 0;
 
-      margin-top:
-        12px;
+      border-radius: 20px;
 
-      font-size:
-        12px;
+      background: #d2d6da;
 
-      color:
-        #555;
+      cursor: pointer;
+
+      transition: 0.2s;
+    }
+
+    .slider::before {
+      content: "";
+
+      position: absolute;
+
+      width: 18px;
+      height: 18px;
+
+      left: 3px;
+      top: 3px;
+
+      border-radius: 50%;
+
+      background: white;
+
+      box-shadow:
+        0 1px 3px
+        rgba(0, 0, 0, 0.2);
+
+      transition: 0.2s;
+    }
+
+    .switch input:checked + .slider {
+      background: #4e6473;
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(18px);
+    }
+
+    .rodape {
+      margin-top: 16px;
+
+      padding-top: 12px;
+
+      border-top: 1px solid #dde1e5;
+
+      text-align: center;
+
+      font-size: 10px;
+      color: #89919a;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <h1>Foco Calmo</h1>
+  <header class="cabecalho">
+    <div class="icone">🌿</div>
+
+    <div class="titulo-area">
+      <h1>Foco Calmo</h1>
+      <p>Acessibilidade e concentração</p>
+    </div>
+  </header>
 
   <p class="descricao">
-    Menos distrações, leitura mais confortável
-    e uma página mais tranquila.
+    Escolha apenas os recursos que você deseja
+    utilizar. Eles funcionam de forma independente.
   </p>
 
-  <label class="opcao">
-    <input
-      type="checkbox"
-      id="modoCalmo"
-    >
-
-    <span>
-      Modo Calmo
-    </span>
-  </label>
-
-  <label class="opcao">
-    <input
-      type="checkbox"
-      id="fonteLegivel"
-    >
-
-    <span>
-      Fonte legível
-    </span>
-  </label>
-
-  <label class="opcao">
-    <input
-      type="checkbox"
-      id="coresSuaves"
-    >
-
-    <span>
-      Cores suaves
-    </span>
-  </label>
-
-  <label class="opcao">
-    <input
-      type="checkbox"
-      id="esconderDistracoes"
-    >
-
-    <span>
-      Esconder anúncios e distrações
-    </span>
-  </label>
-
-  <div class="grupo">
-
-    <strong>
-      Timer de foco
-    </strong>
-
-    <div class="linha-timer">
-
-      <select id="tempoFoco">
-
-        <option value="300">
-          5 minutos
-        </option>
-
-        <option value="900">
-          15 minutos
-        </option>
-
-        <option value="1800">
-          30 minutos
-        </option>
-
-        <option value="2700">
-          45 minutos
-        </option>
-
-        <option value="3600">
-          60 minutos
-        </option>
-
-      </select>
-
-      <button
-        id="iniciarTimer"
-        type="button"
-      >
-        Iniciar
-      </button>
-
-    </div>
-
+  <div class="secao-titulo">
+    Recursos
   </div>
 
-  <div
-    id="status"
-    role="status"
-    aria-live="polite"
-  ></div>
+  <label class="opcao" data-opcao="modoCalmo">
+    <div class="icone-opcao">🧘</div>
+
+    <div class="texto-opcao">
+      <span class="nome-opcao">
+        Modo Calmo
+      </span>
+
+      <span class="descricao-opcao">
+        Reduz animações e movimentos da página.
+      </span>
+    </div>
+
+    <span class="switch">
+      <input
+        type="checkbox"
+        id="modoCalmo"
+      >
+
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <label class="opcao" data-opcao="fonteLegivel">
+    <div class="icone-opcao">Aa</div>
+
+    <div class="texto-opcao">
+      <span class="nome-opcao">
+        Fonte Legível
+      </span>
+
+      <span class="descricao-opcao">
+        Aumenta e organiza o texto para facilitar a leitura.
+      </span>
+    </div>
+
+    <span class="switch">
+      <input
+        type="checkbox"
+        id="fonteLegivel"
+      >
+
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <label class="opcao" data-opcao="coresSuaves">
+    <div class="icone-opcao">◐</div>
+
+    <div class="texto-opcao">
+      <span class="nome-opcao">
+        Cores Suaves
+      </span>
+
+      <span class="descricao-opcao">
+        Reduz cores fortes e deixa a página mais homogênea.
+      </span>
+    </div>
+
+    <span class="switch">
+      <input
+        type="checkbox"
+        id="coresSuaves"
+      >
+
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <label class="opcao" data-opcao="esconderDistracoes">
+    <div class="icone-opcao">✦</div>
+
+    <div class="texto-opcao">
+      <span class="nome-opcao">
+        Esconder Distrações
+      </span>
+
+      <span class="descricao-opcao">
+        Esconde anúncios, banners e pop-ups identificados.
+      </span>
+    </div>
+
+    <span class="switch">
+      <input
+        type="checkbox"
+        id="esconderDistracoes"
+      >
+
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <div class="rodape">
+    Foco Calmo • Acessibilidade
+  </div>
 
   <script src="popup.js"></script>
 
 </body>
-
 </html>
