@@ -1,4 +1,6 @@
 (() => {
+  "use strict";
+
   if (window.__FOCO_CALMO_INICIADO__) {
     return;
   }
@@ -9,6 +11,7 @@
     modoCalmo: "fc-modo-calmo",
     fonteLegivel: "fc-fonte-legivel",
     coresSuaves: "fc-cores-suaves",
+    esconderDistracoes: "fc-esconder-distracoes",
     escondido: "fc-escondido"
   };
 
@@ -19,9 +22,6 @@
     esconderDistracoes: false
   };
 
-  /*
-   * Domínios normalmente usados para publicidade.
-   */
   const HOSTS_PUBLICIDADE = [
     "doubleclick.net",
     "googlesyndication.com",
@@ -43,393 +43,158 @@
     "sharethrough.com"
   ];
 
-  /*
-   * Palavras que aparecem com frequência em elementos
-   * de publicidade.
-   */
-  const REGEX_PUBLICIDADE =
-    /(^|[-_\s])(?:ad|ads|advert|advertisement|advertising|adserver|adslot|adunit|adwrapper|adcontainer|adbanner|adsbygoogle|sponsored|sponsor|patrocinado|publicidade|anuncio|anúncio|interstitial|sticky-ad|overlay-ad|dfp|dart|taboola|outbrain|doubleclick|googlesyndication|googleadservices|adnxs|criteo|amazon-adsystem)(?=$|[-_\s])/i;
-
-  /*
-   * Elementos que são fortes candidatos a publicidade.
-   */
   const SELETORES_PUBLICIDADE = [
     "ins.adsbygoogle",
-
-    "[data-ad]",
-    "[data-ad-slot]",
     "[data-ad-client]",
+    "[data-ad-slot]",
+    "[data-ad-unit]",
     "[data-ad-format]",
+    "[data-ad-region]",
     "[data-advertisement]",
+    "[data-advertising]",
     "[data-google-query-id]",
-
+    "[data-testid*='ad' i]",
     "[aria-label*='advertisement' i]",
-    "[aria-label*='sponsored' i]",
     "[aria-label*='publicidade' i]",
     "[aria-label*='patrocinado' i]",
-
-    "[id*='taboola' i]",
-    "[class*='taboola' i]",
-
-    "[id*='outbrain' i]",
-    "[class*='outbrain' i]",
-
-    "[id*='adsbygoogle' i]",
+    "[aria-label*='sponsored' i]",
     "[class*='adsbygoogle' i]",
-
-    "[id*='dfp' i]",
-    "[class*='dfp' i]",
-
-    "iframe[src*='doubleclick' i]",
-    "iframe[src*='googlesyndication' i]",
-    "iframe[src*='googleadservices' i]",
-    "iframe[src*='adnxs' i]",
-    "iframe[src*='criteo' i]",
-    "iframe[src*='taboola' i]",
-    "iframe[src*='outbrain' i]",
-    "iframe[src*='amazon-adsystem' i]"
+    "[id*='adsbygoogle' i]",
+    "[class*='taboola' i]",
+    "[id*='taboola' i]",
+    "[class*='outbrain' i]",
+    "[id*='outbrain' i]",
+    "[class*='advertisement' i]",
+    "[id*='advertisement' i]",
+    "[class*='ad-container' i]",
+    "[id*='ad-container' i]",
+    "[class*='ad-wrapper' i]",
+    "[id*='ad-wrapper' i]",
+    "[class*='sponsor' i]",
+    "[id*='sponsor' i]",
+    "iframe[src*='doubleclick.net' i]",
+    "iframe[src*='googlesyndication.com' i]",
+    "iframe[src*='googleadservices.com' i]",
+    "iframe[src*='taboola.com' i]",
+    "iframe[src*='outbrain.com' i]"
   ];
 
-  const TEXTO_PUBLICIDADE =
-    /^(advertisement|advertising|sponsored|sponsored content|publicidade|publicidade e anúncios|patrocinado|conteúdo patrocinado|anúncio|anuncios)$/i;
+  const PADROES_PUBLICIDADE = [
+    /\badvertisement\b/i,
+    /\badvertising\b/i,
+    /\bpublicidade\b/i,
+    /\bpatrocinado\b/i,
+    /\bsponsored\b/i,
+    /\bad[-_]?container\b/i,
+    /\bad[-_]?wrapper\b/i,
+    /\bad[-_]?slot\b/i,
+    /\bad[-_]?banner\b/i,
+    /\bgoogle[-_]?ads\b/i,
+    /\badsbygoogle\b/i,
+    /\btaboola\b/i,
+    /\boutbrain\b/i,
+    /\bdoubleclick\b/i,
+    /\bdfp[-_]?ad\b/i,
+    /\bdart[-_]?ad\b/i
+  ];
 
-  let preferencias = {
-    ...PREFERENCIAS_PADRAO
-  };
+  let preferencias = { ...PREFERENCIAS_PADRAO };
 
-  let observadorDistracoes = null;
+  let observadorDOM = null;
   let observadorMidia = null;
-  let timerVarredura = null;
-  let timerLeitura = null;
-  let filaLeitura = [];
+  let restauracaoAgendada = null;
 
-  function corpoPronto(callback) {
-    if (document.body) {
-      callback();
-      return;
-    }
+  let falando = false;
+  let filaFala = [];
+  let indiceFala = 0;
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      callback,
-      {
-        once: true
-      }
-    );
+  function estaNoDocumento(elemento) {
+    return elemento &&
+      elemento.nodeType === Node.ELEMENT_NODE &&
+      document.documentElement.contains(elemento);
   }
 
-  function normalizarTexto(valor) {
-    return String(valor || "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  function elementoVisivel(elemento) {
-    if (!(elemento instanceof Element)) {
-      return false;
-    }
-
-    const estilo = getComputedStyle(elemento);
-
-    if (
-      estilo.display === "none" ||
-      estilo.visibility === "hidden"
-    ) {
-      return false;
-    }
-
-    const rect =
-      elemento.getBoundingClientRect();
-
-    return (
-      rect.width > 0 &&
-      rect.height > 0
-    );
-  }
-
-  /*
-   * Evita esconder elementos gigantes que provavelmente
-   * representam a página inteira.
-   */
-  function tamanhoSeguro(elemento) {
-    const rect =
-      elemento.getBoundingClientRect();
-
-    const viewport =
-      Math.max(window.innerHeight, 1);
-
-    if (
-      rect.width <= 0 ||
-      rect.height <= 0
-    ) {
-      return false;
-    }
-
-    if (
-      rect.width >= window.innerWidth * 0.98 &&
-      rect.height >= viewport * 0.75
-    ) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /*
-   * PROTEÇÃO IMPORTANTE
-   *
-   * Impede que o bloqueador esconda:
-   * - body
-   * - html
-   * - main
-   * - article
-   * - nav
-   * - formulários
-   * - grandes blocos de texto
-   * - grandes blocos que possuem títulos
-   */
-  function elementoProtegido(elemento) {
-    if (!(elemento instanceof Element)) {
-      return true;
-    }
-
-    if (
-      elemento === document.documentElement ||
-      elemento === document.body
-    ) {
-      return true;
-    }
-
-    const tag =
-      elemento.tagName.toLowerCase();
-
-    if (
-      [
-        "html",
-        "body",
-        "main",
-        "article",
-        "nav",
-        "form"
-      ].includes(tag)
-    ) {
-      return true;
-    }
-
-    /*
-     * Elementos de texto individuais nunca são
-     * escondidos apenas por causa da proteção.
-     */
-    if (
-      elemento.matches(
-        "h1, h2, h3, h4, h5, h6, p, ul, ol, li, table, input, textarea, select, button"
-      )
-    ) {
-      return false;
-    }
-
-    /*
-     * Se for um bloco enorme dentro de uma notícia
-     * e tiver bastante texto, protege.
-     */
-    if (
-      elemento.closest("main, article") &&
-      !pareceContainerDeAnuncio(elemento)
-    ) {
-      const texto =
-        normalizarTexto(
-          elemento.textContent
-        );
-
-      if (texto.length > 500) {
-        return true;
-      }
-    }
-
-    /*
-     * Se possui títulos importantes, não esconde.
-     */
-    if (
-      elemento.querySelector(
-        "h1, h2, h3"
-      ) &&
-      !pareceContainerDeAnuncio(elemento)
-    ) {
-      return true;
-    }
-
-    const rect =
-      elemento.getBoundingClientRect();
-
-    const viewport =
-      Math.max(window.innerHeight, 1);
-
-    if (
-      rect.height > viewport * 0.85 &&
-      normalizarTexto(
-        elemento.textContent
-      ).length > 700
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  function atributosDoElemento(elemento) {
-    if (!(elemento instanceof Element)) {
-      return "";
-    }
+  function obterTextoSeguro(elemento) {
+    if (!elemento) return "";
 
     return [
-      elemento.id,
-      elemento.className,
-      elemento.getAttribute("aria-label"),
-      elemento.getAttribute("title"),
-      elemento.getAttribute("role"),
-      elemento.getAttribute("data-testid"),
-      elemento.getAttribute("data-ad"),
-      elemento.getAttribute("data-ad-slot"),
-      elemento.getAttribute("data-ad-client"),
-      elemento.getAttribute("data-ad-format")
-    ]
-      .filter(Boolean)
-      .join(" ");
+      elemento.id || "",
+      typeof elemento.className === "string"
+        ? elemento.className
+        : "",
+      elemento.getAttribute?.("aria-label") || "",
+      elemento.getAttribute?.("data-testid") || ""
+    ].join(" ");
   }
 
-  function pareceContainerDeAnuncio(elemento) {
-    const atributos =
-      atributosDoElemento(elemento);
+  function hostParecePublicidade(url) {
+    if (!url) return false;
 
-    return REGEX_PUBLICIDADE.test(
-      atributos
-    );
-  }
-
-  function hostPublicitario(url) {
     try {
-      const host =
-        new URL(
-          url,
-          location.href
-        ).hostname.toLowerCase();
+      const host = new URL(url, location.href)
+        .hostname
+        .toLowerCase();
 
       return HOSTS_PUBLICIDADE.some(
-        (dominio) =>
+        dominio =>
           host === dominio ||
-          host.endsWith(`.${dominio}`)
+          host.endsWith("." + dominio)
       );
     } catch {
       return false;
     }
   }
 
-  function temOrigemPublicitaria(elemento) {
-    if (!(elemento instanceof Element)) {
-      return false;
+  function elementoProtegido(elemento) {
+    if (!elemento || !estaNoDocumento(elemento)) {
+      return true;
     }
 
-    for (
-      const atributo of [
-        "src",
-        "href",
-        "data-src",
-        "data-url"
-      ]
-    ) {
-      const valor =
-        elemento.getAttribute(
-          atributo
-        );
+    const tag = elemento.tagName?.toLowerCase();
 
-      if (
-        valor &&
-        hostPublicitario(valor)
-      ) {
-        return true;
-      }
+    const tagsProtegidas = [
+      "html",
+      "body",
+      "main",
+      "article",
+      "header",
+      "nav",
+      "footer",
+      "form",
+      "input",
+      "textarea",
+      "select",
+      "button",
+      "label",
+      "table",
+      "thead",
+      "tbody",
+      "tr",
+      "td",
+      "th",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6"
+    ];
+
+    if (tagsProtegidas.includes(tag)) {
+      return true;
     }
 
-    return false;
-  }
+    const texto = (elemento.innerText || "").trim();
 
-  function temDescendentePublicitario(elemento) {
-    if (!(elemento instanceof Element)) {
-      return false;
+    if (texto.length > 1200) {
+      return true;
     }
 
-    try {
-      return Boolean(
-        elemento.querySelector(
-          SELETORES_PUBLICIDADE.join(",")
-        )
-      );
-    } catch {
-      return false;
-    }
-  }
-
-  /*
-   * Detecta publicidade olhando:
-   * - elemento
-   * - pais
-   * - origem do iframe
-   * - atributos
-   * - rótulos
-   */
-  function ehPublicidade(elemento) {
-    if (!(elemento instanceof Element)) {
-      return false;
-    }
-
-    let atual = elemento;
-    let nivel = 0;
-
-    while (
-      atual &&
-      atual !== document.body &&
-      nivel <= 6
-    ) {
-      if (
-        pareceContainerDeAnuncio(atual)
-      ) {
-        return true;
-      }
-
-      if (
-        temOrigemPublicitaria(atual)
-      ) {
-        return true;
-      }
-
-      const texto =
-        normalizarTexto(
-          atual.getAttribute(
-            "aria-label"
-          )
-        );
-
-      if (
-        TEXTO_PUBLICIDADE.test(
-          texto
-        )
-      ) {
-        return true;
-      }
-
-      atual =
-        atual.parentElement;
-
-      nivel += 1;
-    }
+    const rect = elemento.getBoundingClientRect();
 
     if (
-      elemento.matches(
-        "iframe, script, ins"
-      ) &&
-      temOrigemPublicitaria(
-        elemento
-      )
+      rect.width > window.innerWidth * 0.92 &&
+      rect.height > window.innerHeight * 0.75
     ) {
       return true;
     }
@@ -437,576 +202,443 @@
     return false;
   }
 
-  /*
-   * Escolhe o elemento certo para esconder.
-   *
-   * Se for um iframe de anúncio dentro de um
-   * pequeno container de anúncio, esconde o container.
-   *
-   * Nunca sobe até body/main/article.
-   */
+  function ehPublicidade(elemento) {
+    if (!elemento || elemento.nodeType !== Node.ELEMENT_NODE) {
+      return false;
+    }
+
+    const elementosParaVerificar = [
+      elemento,
+      elemento.parentElement,
+      elemento.parentElement?.parentElement
+    ].filter(Boolean);
+
+    for (const item of elementosParaVerificar) {
+      const texto = obterTextoSeguro(item);
+
+      if (
+        PADROES_PUBLICIDADE.some(
+          regex => regex.test(texto)
+        )
+      ) {
+        return true;
+      }
+
+      if (
+        item.matches &&
+        SELETORES_PUBLICIDADE.some(seletor => {
+          try {
+            return item.matches(seletor);
+          } catch {
+            return false;
+          }
+        })
+      ) {
+        return true;
+      }
+    }
+
+    if (elemento.tagName?.toLowerCase() === "iframe") {
+      const src = elemento.getAttribute("src") || "";
+
+      if (hostParecePublicidade(src)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   function alvoParaEsconder(elemento) {
-    if (!(elemento instanceof Element)) {
+    if (!elemento || elementoProtegido(elemento)) {
       return null;
     }
 
     let alvo = elemento;
-    let atual = elemento;
 
-    for (
-      let i = 0;
-      i < 3 &&
-      atual &&
-      atual !== document.body;
-      i += 1
-    ) {
-      if (
-        pareceContainerDeAnuncio(
-          atual
-        ) &&
-        !elementoProtegido(
-          atual
-        ) &&
-        tamanhoSeguro(atual)
-      ) {
-        alvo = atual;
-      }
+    const tag = alvo.tagName?.toLowerCase();
 
-      const pai =
-        atual.parentElement;
-
-      if (
-        !pai ||
-        pai === document.body
-      ) {
-        break;
-      }
-
-      const filhosVisiveis =
-        Array.from(
-          pai.children
-        ).filter(
-          elementoVisivel
-        );
-
-      /*
-       * Se o pai contém praticamente
-       * apenas o anúncio, podemos
-       * esconder o pai.
-       */
-      if (
-        filhosVisiveis.length <= 2 &&
-        filhosVisiveis.includes(atual) &&
-        pareceContainerDeAnuncio(pai) &&
-        !elementoProtegido(pai) &&
-        tamanhoSeguro(pai)
-      ) {
-        alvo = pai;
-      }
-
-      atual = pai;
+    if (tag === "span" || tag === "label") {
+      alvo = alvo.closest(
+        "div, section, aside, figure, li"
+      ) || alvo;
     }
 
-    if (
-      elementoProtegido(alvo)
-    ) {
-      return null;
-    }
-
-    if (
-      !tamanhoSeguro(alvo)
-    ) {
+    if (elementoProtegido(alvo)) {
       return null;
     }
 
     return alvo;
   }
 
-  function esconderElemento(elemento) {
-    const alvo =
-      alvoParaEsconder(elemento);
-
-    if (!alvo) {
-      return;
-    }
-
-    alvo.classList.add(
-      CLASSES.escondido
-    );
-  }
-
-  /*
-   * Procura publicidade de várias maneiras.
-   */
   function selecionarPossiveisAnuncios() {
-    const encontrados =
-      new Set();
+    const encontrados = new Set();
 
-    try {
-      document
-        .querySelectorAll(
-          SELETORES_PUBLICIDADE.join(",")
-        )
-        .forEach(
-          (elemento) =>
-            encontrados.add(elemento)
-        );
-    } catch {
-      // Continua com as outras formas de detecção.
+    for (const seletor of SELETORES_PUBLICIDADE) {
+      try {
+        document
+          .querySelectorAll(seletor)
+          .forEach(elemento => encontrados.add(elemento));
+      } catch {
+        // Ignora seletor incompatível.
+      }
     }
 
-    /*
-     * Procura elementos que possuam
-     * ID ou classe relacionados a publicidade.
-     */
     document
       .querySelectorAll(
-        "iframe, ins, [id], [class]"
+        "iframe, ins, [id], [class], [aria-label]"
       )
-      .forEach(
-        (elemento) => {
-          if (
-            pareceContainerDeAnuncio(
-              elemento
-            ) ||
-            temOrigemPublicitaria(
-              elemento
-            )
-          ) {
-            encontrados.add(
-              elemento
-            );
-          }
+      .forEach(elemento => {
+        if (ehPublicidade(elemento)) {
+          encontrados.add(elemento);
         }
-      );
+      });
 
-    /*
-     * Procura rótulos como
-     * "Advertisement" e "Sponsored".
-     */
-    document
-      .querySelectorAll(
-        "[aria-label]"
-      )
-      .forEach(
-        (elemento) => {
-          const label =
-            normalizarTexto(
-              elemento.getAttribute(
-                "aria-label"
-              )
-            );
-
-          if (
-            TEXTO_PUBLICIDADE.test(
-              label
-            )
-          ) {
-            encontrados.add(
-              elemento
-            );
-          }
-        }
-      );
-
-    return encontrados;
+    return [...encontrados];
   }
 
   function esconderDistracoesAgora() {
-    if (
-      !preferencias.esconderDistracoes ||
-      !document.body
-    ) {
+    if (!preferencias.esconderDistracoes) {
       return;
     }
 
-    selecionarPossiveisAnuncios()
-      .forEach(
-        esconderElemento
-      );
+    const elementos = selecionarPossiveisAnuncios();
+
+    for (const elemento of elementos) {
+      const alvo = alvoParaEsconder(elemento);
+
+      if (!alvo) continue;
+
+      const rect = alvo.getBoundingClientRect();
+
+      if (
+        rect.width >= 40 &&
+        rect.height >= 25
+      ) {
+        alvo.classList.add(CLASSES.escondido);
+        alvo.setAttribute(
+          "data-fc-escondido",
+          "true"
+        );
+      }
+    }
   }
 
   function restaurarDistracoes() {
     document
       .querySelectorAll(
-        `.${CLASSES.escondido}`
+        `[data-fc-escondido="true"]`
       )
-      .forEach(
-        (elemento) => {
-          elemento.classList.remove(
-            CLASSES.escondido
-          );
-        }
-      );
+      .forEach(elemento => {
+        elemento.classList.remove(
+          CLASSES.escondido
+        );
+
+        elemento.removeAttribute(
+          "data-fc-escondido"
+        );
+      });
   }
 
-  /*
-   * Evita executar centenas de varreduras
-   * seguidas quando um site atualiza o DOM.
-   */
-  function programarVarredura() {
-    clearTimeout(
-      timerVarredura
+  function atualizarCoresDaPagina() {
+    if (!preferencias.coresSuaves) {
+      document.documentElement.removeAttribute(
+        "data-fc-tema"
+      );
+      return;
+    }
+
+    const body = document.body;
+
+    if (!body) return;
+
+    const estilo = getComputedStyle(body);
+
+    const cor = estilo.backgroundColor;
+
+    const rgb = cor.match(
+      /\d+(?:\.\d+)?/g
     );
 
-    timerVarredura =
-      setTimeout(() => {
-        esconderDistracoesAgora();
-
-        if (
-          preferencias.modoCalmo
-        ) {
-          pausarMidiasNormais();
-        }
-      }, 120);
-  }
-
-  function iniciarObservadorDistracoes() {
-    if (
-      observadorDistracoes ||
-      !document.body
-    ) {
-      return;
-    }
-
-    observadorDistracoes =
-      new MutationObserver(
-        (mutacoes) => {
-          if (
-            !preferencias.esconderDistracoes &&
-            !preferencias.modoCalmo
-          ) {
-            return;
-          }
-
-          const houveMudanca =
-            mutacoes.some(
-              (mutacao) =>
-                Array.from(
-                  mutacao.addedNodes
-                ).some(
-                  (node) =>
-                    node.nodeType ===
-                    Node.ELEMENT_NODE
-                )
-            );
-
-          if (houveMudanca) {
-            programarVarredura();
-          }
-        }
+    if (!rgb || rgb.length < 3) {
+      document.documentElement.setAttribute(
+        "data-fc-tema",
+        "claro"
       );
-
-    observadorDistracoes.observe(
-      document.body,
-      {
-        childList: true,
-        subtree: true
-      }
-    );
-  }
-
-  function pararObservadorDistracoes() {
-    if (
-      !observadorDistracoes
-    ) {
       return;
     }
 
-    observadorDistracoes.disconnect();
-    observadorDistracoes = null;
-  }
+    const r = Number(rgb[0]);
+    const g = Number(rgb[1]);
+    const b = Number(rgb[2]);
 
-  /*
-   * Pausa vídeos e áudios.
-   *
-   * Isso também pega publicidade em vídeo
-   * quando o elemento está acessível ao content script.
-   */
-  function pausarMidia(midia) {
-    if (
-      !(midia instanceof HTMLMediaElement)
-    ) {
-      return;
-    }
+    const luminosidade =
+      (0.299 * r) +
+      (0.587 * g) +
+      (0.114 * b);
 
-    try {
-      midia.autoplay = false;
-      midia.pause();
-    } catch {
-      // Alguns players controlados pelo site
-      // podem rejeitar alterações.
-    }
-  }
-
-  function pausarMidiasNormais() {
-    if (
-      !preferencias.modoCalmo
-    ) {
-      return;
-    }
-
-    document
-      .querySelectorAll(
-        "video, audio"
-      )
-      .forEach(
-        pausarMidia
-      );
-  }
-
-  function iniciarObservadorMidia() {
-    if (
-      observadorMidia ||
-      !document.body
-    ) {
-      return;
-    }
-
-    observadorMidia =
-      new MutationObserver(
-        (mutacoes) => {
-          if (
-            !preferencias.modoCalmo
-          ) {
-            return;
-          }
-
-          mutacoes.forEach(
-            (mutacao) => {
-              mutacao.addedNodes.forEach(
-                (node) => {
-                  if (
-                    !(node instanceof Element)
-                  ) {
-                    return;
-                  }
-
-                  if (
-                    node.matches(
-                      "video, audio"
-                    )
-                  ) {
-                    pausarMidia(node);
-                  }
-
-                  node
-                    .querySelectorAll?.(
-                      "video, audio"
-                    )
-                    .forEach(
-                      pausarMidia
-                    );
-                }
-              );
-            }
-          );
-        }
-      );
-
-    observadorMidia.observe(
-      document.body,
-      {
-        childList: true,
-        subtree: true
-      }
+    document.documentElement.setAttribute(
+      "data-fc-tema",
+      luminosidade < 125
+        ? "escuro"
+        : "claro"
     );
   }
 
   function aplicarClasses() {
-    const html =
-      document.documentElement;
-
-    if (!html) {
-      return;
-    }
+    const html = document.documentElement;
 
     html.classList.toggle(
       CLASSES.modoCalmo,
-      Boolean(
-        preferencias.modoCalmo
-      )
+      Boolean(preferencias.modoCalmo)
     );
 
     html.classList.toggle(
       CLASSES.fonteLegivel,
-      Boolean(
-        preferencias.fonteLegivel
-      )
+      Boolean(preferencias.fonteLegivel)
     );
 
     html.classList.toggle(
       CLASSES.coresSuaves,
-      Boolean(
-        preferencias.coresSuaves
-      )
+      Boolean(preferencias.coresSuaves)
+    );
+
+    html.classList.toggle(
+      CLASSES.esconderDistracoes,
+      Boolean(preferencias.esconderDistracoes)
+    );
+
+    atualizarCoresDaPagina();
+
+    if (preferencias.esconderDistracoes) {
+      esconderDistracoesAgora();
+    } else {
+      restaurarDistracoes();
+    }
+
+    if (preferencias.modoCalmo) {
+      pausarMidia();
+    }
+  }
+
+  function pausarMidia() {
+    if (!preferencias.modoCalmo) {
+      return;
+    }
+
+    document
+      .querySelectorAll("video, audio")
+      .forEach(midia => {
+        try {
+          if (!midia.paused) {
+            midia.pause();
+          }
+
+          midia.autoplay = false;
+          midia.removeAttribute("autoplay");
+        } catch {
+          // Alguns players bloqueiam alterações.
+        }
+      });
+  }
+
+  function iniciarObservadorMidia() {
+    if (observadorMidia) {
+      return;
+    }
+
+    observadorMidia =
+      new MutationObserver(() => {
+        if (preferencias.modoCalmo) {
+          pausarMidia();
+        }
+      });
+
+    observadorMidia.observe(
+      document.documentElement,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+    document.addEventListener(
+      "play",
+      evento => {
+        if (
+          preferencias.modoCalmo &&
+          evento.target instanceof HTMLMediaElement
+        ) {
+          try {
+            evento.target.pause();
+          } catch {
+            // Ignora.
+          }
+        }
+      },
+      true
     );
   }
 
-  function aplicarPreferencias(
-    novasPreferencias
-  ) {
-    preferencias = {
-      ...preferencias,
-      ...novasPreferencias
-    };
-
-    aplicarClasses();
-
-    if (
-      preferencias.esconderDistracoes
-    ) {
-      iniciarObservadorDistracoes();
-      programarVarredura();
-    } else {
-      restaurarDistracoes();
-      pararObservadorDistracoes();
+  function iniciarObservadorDistracoes() {
+    if (observadorDOM) {
+      return;
     }
 
-    if (
-      preferencias.modoCalmo
-    ) {
-      iniciarObservadorDistracoes();
-      iniciarObservadorMidia();
+    observadorDOM =
+      new MutationObserver(() => {
+        if (
+          !preferencias.esconderDistracoes
+        ) {
+          return;
+        }
 
-      pausarMidiasNormais();
-      programarVarredura();
-    }
+        clearTimeout(restauracaoAgendada);
+
+        restauracaoAgendada =
+          setTimeout(() => {
+            esconderDistracoesAgora();
+          }, 250);
+      });
+
+    observadorDOM.observe(
+      document.documentElement,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
   }
 
-  /*
-   * Leitura em voz alta.
-   */
   function falarTexto(texto) {
-    const limpo =
-      normalizarTexto(texto);
+    if (!("speechSynthesis" in window)) {
+      return;
+    }
 
-    if (
-      !limpo ||
-      !("speechSynthesis" in window)
-    ) {
+    const textoLimpo =
+      String(texto || "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    if (!textoLimpo) {
       return;
     }
 
     window.speechSynthesis.cancel();
 
-    filaLeitura = [];
+    const tamanho = 3000;
 
-    const limite = 3500;
+    filaFala = [];
 
     for (
       let inicio = 0;
-      inicio < limpo.length;
-      inicio += limite
+      inicio < textoLimpo.length;
+      inicio += tamanho
     ) {
-      filaLeitura.push(
-        limpo.slice(
+      filaFala.push(
+        textoLimpo.slice(
           inicio,
-          inicio + limite
+          inicio + tamanho
         )
       );
     }
 
-    filaLeitura.forEach(
-      (parte) => {
-        const fala =
-          new SpeechSynthesisUtterance(
-            parte
-          );
+    indiceFala = 0;
+    falando = true;
 
-        fala.lang =
-          document.documentElement
-            .lang ||
-          "pt-BR";
-
-        fala.rate = 0.95;
-        fala.pitch = 1;
-
-        window.speechSynthesis.speak(
-          fala
-        );
-      }
-    );
+    falarProximoTrecho();
   }
 
-  /*
-   * Timer.
-   */
-  function iniciarTimer(
-    segundos
-  ) {
-    clearTimeout(
-      timerLeitura
-    );
-
-    document.documentElement
-      .classList.remove(
-        "fc-timer-finalizado"
-      );
-
-    const total =
-      Number(segundos);
-
+  function falarProximoTrecho() {
     if (
-      !Number.isFinite(total) ||
-      total <= 0
+      !falando ||
+      indiceFala >= filaFala.length
     ) {
+      falando = false;
+      filaFala = [];
       return;
     }
 
-    timerLeitura =
-      setTimeout(() => {
-        document.documentElement
-          .classList.add(
-            "fc-timer-finalizado"
-          );
-      }, total * 1000);
+    const fala =
+      new SpeechSynthesisUtterance(
+        filaFala[indiceFala]
+      );
+
+    fala.lang = document.documentElement.lang || "pt-BR";
+    fala.rate = 0.95;
+    fala.pitch = 1;
+
+    fala.onend = () => {
+      indiceFala++;
+      falarProximoTrecho();
+    };
+
+    fala.onerror = () => {
+      falando = false;
+      filaFala = [];
+    };
+
+    window.speechSynthesis.speak(fala);
   }
 
-  /*
-   * Se qualquer vídeo/áudio começar a tocar
-   * enquanto o Modo Calmo estiver ativo,
-   * ele será pausado novamente.
-   */
-  document.addEventListener(
-    "play",
-    (evento) => {
-      if (
-        !preferencias.modoCalmo
-      ) {
+  function atualizarPreferencias(novas) {
+    preferencias = {
+      ...preferencias,
+      ...novas
+    };
+
+    aplicarClasses();
+  }
+
+  function carregarPreferencias() {
+    chrome.storage.sync.get(
+      PREFERENCIAS_PADRAO,
+      resultado => {
+        preferencias = {
+          ...PREFERENCIAS_PADRAO,
+          ...resultado
+        };
+
+        aplicarClasses();
+      }
+    );
+  }
+
+  // Mantém todas as abas abertas em sincronia: se o usuário mudar uma
+  // preferência pelo popup ou pelo atalho de teclado em uma aba, as
+  // demais abas já abertas refletem a mudança imediatamente, sem
+  // precisar recarregar a página.
+  function ouvirMudancasDeArmazenamento() {
+    chrome.storage.onChanged.addListener((mudancas, area) => {
+      if (area !== "sync") {
         return;
       }
 
-      if (
-        evento.target instanceof
-        HTMLMediaElement
-      ) {
-        pausarMidia(
-          evento.target
-        );
+      const atualizacoes = {};
+      let houveMudanca = false;
+
+      for (const chave of Object.keys(PREFERENCIAS_PADRAO)) {
+        if (chave in mudancas) {
+          atualizacoes[chave] = Boolean(
+            mudancas[chave].newValue
+          );
+          houveMudanca = true;
+        }
       }
-    },
-    true
-  );
+
+      if (houveMudanca) {
+        atualizarPreferencias(atualizacoes);
+      }
+    });
+  }
 
   chrome.runtime.onMessage.addListener(
-    (
-      mensagem,
-      _remetente,
-      responder
-    ) => {
+    (mensagem, remetente, responder) => {
       if (
-        !mensagem ||
-        !mensagem.tipo
-      ) {
-        return;
-      }
-
-      if (
-        mensagem.tipo ===
+        mensagem?.tipo ===
         "ATUALIZAR_PREFERENCIAS"
       ) {
-        aplicarPreferencias(
+        atualizarPreferencias(
           mensagem.prefs || {}
         );
 
@@ -1014,11 +646,11 @@
           ok: true
         });
 
-        return;
+        return true;
       }
 
       if (
-        mensagem.tipo ===
+        mensagem?.tipo ===
         "LER_EM_VOZ_ALTA"
       ) {
         falarTexto(
@@ -1029,36 +661,42 @@
           ok: true
         });
 
-        return;
+        return true;
       }
 
-      if (
-        mensagem.tipo ===
-        "INICIAR_TIMER"
-      ) {
-        iniciarTimer(
-          mensagem.segundos
-        );
-
-        responder?.({
-          ok: true
-        });
-      }
+      return false;
     }
   );
 
-  corpoPronto(() => {
+  function corpoPronto() {
+    carregarPreferencias();
     iniciarObservadorDistracoes();
     iniciarObservadorMidia();
+    ouvirMudancasDeArmazenamento();
 
-    chrome.storage.sync.get(
-      PREFERENCIAS_PADRAO,
-      (prefs) => {
-        aplicarPreferencias(
-          prefs ||
-            PREFERENCIAS_PADRAO
-        );
+    setTimeout(
+      atualizarCoresDaPagina,
+      1000
+    );
+
+    setTimeout(
+      atualizarCoresDaPagina,
+      3000
+    );
+  }
+
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      corpoPronto,
+      {
+        once: true
       }
     );
-  });
+  } else {
+    corpoPronto();
+  }
 })();
