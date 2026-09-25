@@ -1,15 +1,18 @@
-const IDS = [
+const IDS_TOGGLE = [
   "modoCalmo",
   "fonteLegivel",
-  "coresSuaves",
-  "esconderDistracoes"
+  "esconderDistracoes",
+  "guiaLeitura",
+  "modoTexto"
 ];
 
 const PADRAO = {
   modoCalmo: false,
   fonteLegivel: false,
-  coresSuaves: false,
-  esconderDistracoes: false
+  intensidadeCores: 0,
+  esconderDistracoes: false,
+  guiaLeitura: false,
+  modoTexto: false
 };
 
 function obterPreferencias(callback) {
@@ -19,48 +22,23 @@ function obterPreferencias(callback) {
   );
 }
 
-function salvarPreferencia(
-  chave,
-  valor
-) {
+function salvarPreferencia(chave, valor) {
   chrome.storage.sync.set({
-    [chave]: Boolean(valor)
+    [chave]: valor
   });
 }
 
-function atualizarVisual(chave) {
-  const input =
-    document.getElementById(chave);
-
-  if (!input) return;
-
-  const opcao =
-    document.querySelector(
-      `[data-opcao="${chave}"]`
-    );
+function atualizarVisual(chave, ativo) {
+  const opcao = document.querySelector(
+    `[data-opcao="${chave}"]`
+  );
 
   if (!opcao) return;
 
   opcao.classList.toggle(
     "ativa",
-    input.checked
+    ativo
   );
-}
-
-function carregarInterface() {
-  obterPreferencias(prefs => {
-    IDS.forEach(chave => {
-      const input =
-        document.getElementById(chave);
-
-      if (!input) return;
-
-      input.checked =
-        Boolean(prefs[chave]);
-
-      atualizarVisual(chave);
-    });
-  });
 }
 
 function enviarParaAba(mensagem) {
@@ -70,6 +48,7 @@ function enviarParaAba(mensagem) {
       currentWindow: true
     },
     abas => {
+
       const aba = abas[0];
 
       if (
@@ -93,7 +72,61 @@ function enviarParaAba(mensagem) {
   );
 }
 
-IDS.forEach(chave => {
+function carregarInterface() {
+
+  obterPreferencias(prefs => {
+
+    IDS_TOGGLE.forEach(chave => {
+
+      const input =
+        document.getElementById(chave);
+
+      if (!input) return;
+
+      input.checked =
+        Boolean(prefs[chave]);
+
+      atualizarVisual(
+        chave,
+        input.checked
+      );
+    });
+
+    const sliderCores =
+      document.getElementById(
+        "intensidadeCores"
+      );
+
+    const valorCoresEl =
+      document.getElementById(
+        "valorIntensidadeCores"
+      );
+
+    const valorInicial =
+      Number(
+        prefs.intensidadeCores
+      ) || 0;
+
+    if (sliderCores) {
+      sliderCores.value =
+        valorInicial;
+    }
+
+    if (valorCoresEl) {
+      valorCoresEl.textContent =
+        `${valorInicial}%`;
+    }
+
+    atualizarVisual(
+      "intensidadeCores",
+      valorInicial > 0
+    );
+
+  });
+}
+
+IDS_TOGGLE.forEach(chave => {
+
   const input =
     document.getElementById(chave);
 
@@ -102,6 +135,7 @@ IDS.forEach(chave => {
   input.addEventListener(
     "change",
     () => {
+
       const valor =
         input.checked;
 
@@ -110,16 +144,138 @@ IDS.forEach(chave => {
         valor
       );
 
-      atualizarVisual(chave);
+      atualizarVisual(
+        chave,
+        valor
+      );
 
       enviarParaAba({
-        tipo: "ATUALIZAR_PREFERENCIAS",
+        tipo:
+          "ATUALIZAR_PREFERENCIAS",
+
         prefs: {
           [chave]: valor
         }
       });
+
     }
   );
+
 });
+
+const sliderCores =
+  document.getElementById(
+    "intensidadeCores"
+  );
+
+const valorCoresEl =
+  document.getElementById(
+    "valorIntensidadeCores"
+  );
+
+if (sliderCores) {
+
+  sliderCores.addEventListener(
+    "input",
+    () => {
+
+      const valor =
+        Number(
+          sliderCores.value
+        );
+
+      if (valorCoresEl) {
+
+        valorCoresEl.textContent =
+          `${valor}%`;
+
+      }
+
+      atualizarVisual(
+        "intensidadeCores",
+        valor > 0
+      );
+
+      enviarParaAba({
+
+        tipo:
+          "ATUALIZAR_PREFERENCIAS",
+
+        prefs: {
+          intensidadeCores:
+            valor
+        }
+
+      });
+
+    }
+  );
+
+  sliderCores.addEventListener(
+    "change",
+    () => {
+
+      salvarPreferencia(
+        "intensidadeCores",
+        Number(sliderCores.value)
+      );
+
+    }
+  );
+}
+
+const botaoSelecionar =
+  document.getElementById(
+    "botaoSelecionar"
+  );
+
+if (botaoSelecionar) {
+
+  botaoSelecionar.addEventListener(
+    "click",
+    () => {
+
+      enviarParaAba({
+        tipo:
+          "ATIVAR_SELETOR_MANUAL",
+
+        ativar: true
+      });
+
+      window.close();
+
+    }
+  );
+}
+
+const botaoLimparSelecao =
+  document.getElementById(
+    "botaoLimparSelecao"
+  );
+
+if (botaoLimparSelecao) {
+
+  botaoLimparSelecao.addEventListener(
+    "click",
+    () => {
+
+      enviarParaAba({
+        tipo:
+          "LIMPAR_SELECAO_MANUAL"
+      });
+
+      botaoLimparSelecao.textContent =
+        "Restaurado ✓";
+
+      setTimeout(() => {
+
+        botaoLimparSelecao.textContent =
+          "Restaurar elementos desta página";
+
+      }, 1200);
+
+    }
+  );
+}
 
 carregarInterface();

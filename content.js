@@ -12,14 +12,21 @@
     fonteLegivel: "fc-fonte-legivel",
     coresSuaves: "fc-cores-suaves",
     esconderDistracoes: "fc-esconder-distracoes",
-    escondido: "fc-escondido"
+    escondido: "fc-escondido",
+    guiaLeitura: "fc-guia-leitura",
+    guiaDestaque: "fc-guia-destaque",
+    modoTexto: "fc-modo-texto",
+    modoSelecao: "fc-modo-selecao",
+    destaqueSelecao: "fc-destaque-selecao"
   };
 
   const PREFERENCIAS_PADRAO = {
     modoCalmo: false,
     fonteLegivel: false,
-    coresSuaves: false,
-    esconderDistracoes: false
+    intensidadeCores: 0,
+    esconderDistracoes: false,
+    guiaLeitura: false,
+    modoTexto: false
   };
 
   const HOSTS_PUBLICIDADE = [
@@ -108,10 +115,17 @@
   let filaFala = [];
   let indiceFala = 0;
 
+  let modoSelecaoAtivo = false;
+  let elementoDestacado = null;
+
+  let elementoGuiaAtual = null;
+
   function estaNoDocumento(elemento) {
-    return elemento &&
+    return (
+      elemento &&
       elemento.nodeType === Node.ELEMENT_NODE &&
-      document.documentElement.contains(elemento);
+      document.documentElement.contains(elemento)
+    );
   }
 
   function obterTextoSeguro(elemento) {
@@ -131,9 +145,10 @@
     if (!url) return false;
 
     try {
-      const host = new URL(url, location.href)
-        .hostname
-        .toLowerCase();
+      const host = new URL(
+        url,
+        location.href
+      ).hostname.toLowerCase();
 
       return HOSTS_PUBLICIDADE.some(
         dominio =>
@@ -150,7 +165,8 @@
       return true;
     }
 
-    const tag = elemento.tagName?.toLowerCase();
+    const tag =
+      elemento.tagName?.toLowerCase();
 
     const tagsProtegidas = [
       "html",
@@ -184,17 +200,54 @@
       return true;
     }
 
-    const texto = (elemento.innerText || "").trim();
+    const texto =
+      (elemento.innerText || "").trim();
 
     if (texto.length > 1200) {
       return true;
     }
 
-    const rect = elemento.getBoundingClientRect();
+    const rect =
+      elemento.getBoundingClientRect();
 
     if (
-      rect.width > window.innerWidth * 0.92 &&
-      rect.height > window.innerHeight * 0.75
+      rect.width >
+        window.innerWidth * 0.92 &&
+      rect.height >
+        window.innerHeight * 0.75
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function elementoBloqueadoParaSelecaoManual(
+    elemento
+  ) {
+    if (
+      !elemento ||
+      !estaNoDocumento(elemento)
+    ) {
+      return true;
+    }
+
+    if (
+      elemento ===
+        document.documentElement ||
+      elemento === document.body
+    ) {
+      return true;
+    }
+
+    const rect =
+      elemento.getBoundingClientRect();
+
+    if (
+      rect.width >
+        window.innerWidth * 0.95 &&
+      rect.height >
+        window.innerHeight * 0.85
     ) {
       return true;
     }
@@ -203,7 +256,11 @@
   }
 
   function ehPublicidade(elemento) {
-    if (!elemento || elemento.nodeType !== Node.ELEMENT_NODE) {
+    if (
+      !elemento ||
+      elemento.nodeType !==
+        Node.ELEMENT_NODE
+    ) {
       return false;
     }
 
@@ -213,8 +270,11 @@
       elemento.parentElement?.parentElement
     ].filter(Boolean);
 
-    for (const item of elementosParaVerificar) {
-      const texto = obterTextoSeguro(item);
+    for (
+      const item of elementosParaVerificar
+    ) {
+      const texto =
+        obterTextoSeguro(item);
 
       if (
         PADROES_PUBLICIDADE.some(
@@ -226,22 +286,34 @@
 
       if (
         item.matches &&
-        SELETORES_PUBLICIDADE.some(seletor => {
-          try {
-            return item.matches(seletor);
-          } catch {
-            return false;
+        SELETORES_PUBLICIDADE.some(
+          seletor => {
+            try {
+              return item.matches(
+                seletor
+              );
+            } catch {
+              return false;
+            }
           }
-        })
+        )
       ) {
         return true;
       }
     }
 
-    if (elemento.tagName?.toLowerCase() === "iframe") {
-      const src = elemento.getAttribute("src") || "";
+    if (
+      elemento.tagName?.toLowerCase() ===
+      "iframe"
+    ) {
+      const src =
+        elemento.getAttribute(
+          "src"
+        ) || "";
 
-      if (hostParecePublicidade(src)) {
+      if (
+        hostParecePublicidade(src)
+      ) {
         return true;
       }
     }
@@ -249,22 +321,34 @@
     return false;
   }
 
-  function alvoParaEsconder(elemento) {
-    if (!elemento || elementoProtegido(elemento)) {
+  function alvoParaEsconder(
+    elemento
+  ) {
+    if (
+      !elemento ||
+      elementoProtegido(elemento)
+    ) {
       return null;
     }
 
     let alvo = elemento;
 
-    const tag = alvo.tagName?.toLowerCase();
+    const tag =
+      alvo.tagName?.toLowerCase();
 
-    if (tag === "span" || tag === "label") {
-      alvo = alvo.closest(
-        "div, section, aside, figure, li"
-      ) || alvo;
+    if (
+      tag === "span" ||
+      tag === "label"
+    ) {
+      alvo =
+        alvo.closest(
+          "div, section, aside, figure, li"
+        ) || alvo;
     }
 
-    if (elementoProtegido(alvo)) {
+    if (
+      elementoProtegido(alvo)
+    ) {
       return null;
     }
 
@@ -272,13 +356,19 @@
   }
 
   function selecionarPossiveisAnuncios() {
-    const encontrados = new Set();
+    const encontrados =
+      new Set();
 
-    for (const seletor of SELETORES_PUBLICIDADE) {
+    for (
+      const seletor of
+        SELETORES_PUBLICIDADE
+    ) {
       try {
         document
           .querySelectorAll(seletor)
-          .forEach(elemento => encontrados.add(elemento));
+          .forEach(elemento =>
+            encontrados.add(elemento)
+          );
       } catch {
         // Ignora seletor incompatível.
       }
@@ -289,7 +379,9 @@
         "iframe, ins, [id], [class], [aria-label]"
       )
       .forEach(elemento => {
-        if (ehPublicidade(elemento)) {
+        if (
+          ehPublicidade(elemento)
+        ) {
           encontrados.add(elemento);
         }
       });
@@ -298,26 +390,36 @@
   }
 
   function esconderDistracoesAgora() {
-    if (!preferencias.esconderDistracoes) {
+    if (
+      !preferencias.esconderDistracoes
+    ) {
       return;
     }
 
-    const elementos = selecionarPossiveisAnuncios();
+    const elementos =
+      selecionarPossiveisAnuncios();
 
-    for (const elemento of elementos) {
-      const alvo = alvoParaEsconder(elemento);
+    for (
+      const elemento of elementos
+    ) {
+      const alvo =
+        alvoParaEsconder(elemento);
 
       if (!alvo) continue;
 
-      const rect = alvo.getBoundingClientRect();
+      const rect =
+        alvo.getBoundingClientRect();
 
       if (
         rect.width >= 40 &&
         rect.height >= 25
       ) {
-        alvo.classList.add(CLASSES.escondido);
+        alvo.classList.add(
+          CLASSES.escondido
+        );
+
         alvo.setAttribute(
-          "data-fc-escondido",
+          "data-fc-auto",
           "true"
         );
       }
@@ -327,7 +429,7 @@
   function restaurarDistracoes() {
     document
       .querySelectorAll(
-        `[data-fc-escondido="true"]`
+        '[data-fc-auto="true"]'
       )
       .forEach(elemento => {
         elemento.classList.remove(
@@ -335,47 +437,539 @@
         );
 
         elemento.removeAttribute(
-          "data-fc-escondido"
+          "data-fc-auto"
         );
       });
   }
 
-  function atualizarCoresDaPagina() {
-    if (!preferencias.coresSuaves) {
-      document.documentElement.removeAttribute(
-        "data-fc-tema"
+  // ===================================================
+  // GUIA DE LEITURA
+  // ===================================================
+
+  function obterElementoGuia(
+    elemento
+  ) {
+    if (
+      !elemento ||
+      !(elemento instanceof Element)
+    ) {
+      return null;
+    }
+
+    const alvo =
+      elemento.closest(
+        "p, li, blockquote, figcaption, dd, dt, h1, h2, h3, h4, h5, h6"
       );
+
+    if (!alvo) {
+      return null;
+    }
+
+    if (
+      alvo.closest(
+        "header, nav, footer, button, input, textarea, select, option"
+      )
+    ) {
+      return null;
+    }
+
+    const texto =
+      (alvo.innerText || "").trim();
+
+    if (!texto) {
+      return null;
+    }
+
+    return alvo;
+  }
+
+  function removerDestaqueGuia() {
+    if (
+      elementoGuiaAtual &&
+      estaNoDocumento(
+        elementoGuiaAtual
+      )
+    ) {
+      elementoGuiaAtual.classList.remove(
+        CLASSES.guiaDestaque
+      );
+    }
+
+    elementoGuiaAtual = null;
+  }
+
+  function atualizarDestaqueGuia(
+    evento
+  ) {
+    if (
+      !preferencias.guiaLeitura
+    ) {
+      removerDestaqueGuia();
       return;
     }
 
-    const body = document.body;
+    const alvo =
+      evento.target;
 
-    if (!body) return;
+    if (
+      !(alvo instanceof Element)
+    ) {
+      return;
+    }
 
-    const estilo = getComputedStyle(body);
+    const novoElemento =
+      obterElementoGuia(alvo);
 
-    const cor = estilo.backgroundColor;
+    if (
+      novoElemento ===
+      elementoGuiaAtual
+    ) {
+      return;
+    }
 
-    const rgb = cor.match(
-      /\d+(?:\.\d+)?/g
+    removerDestaqueGuia();
+
+    if (!novoElemento) {
+      return;
+    }
+
+    elementoGuiaAtual =
+      novoElemento;
+
+    elementoGuiaAtual.classList.add(
+      CLASSES.guiaDestaque
+    );
+  }
+
+  function tratarSaidaGuia(
+    evento
+  ) {
+    if (
+      !preferencias.guiaLeitura
+    ) {
+      return;
+    }
+
+    const relacionado =
+      evento.relatedTarget;
+
+    if (
+      relacionado &&
+      elementoGuiaAtual &&
+      elementoGuiaAtual.contains(
+        relacionado
+      )
+    ) {
+      return;
+    }
+
+    if (
+      !relacionado ||
+      !elementoGuiaAtual?.contains(
+        relacionado
+      )
+    ) {
+      removerDestaqueGuia();
+    }
+  }
+
+  function iniciarGuiaLeitura() {
+    document.addEventListener(
+      "mouseover",
+      atualizarDestaqueGuia,
+      true
     );
 
-    if (!rgb || rgb.length < 3) {
+    document.addEventListener(
+      "mouseout",
+      tratarSaidaGuia,
+      true
+    );
+  }
+
+  // ===================================================
+  // SELEÇÃO MANUAL
+  // ===================================================
+
+  function gerarSeletorUnico(
+    elemento
+  ) {
+    if (elemento.id) {
+      const porId =
+        `#${CSS.escape(elemento.id)}`;
+
+      try {
+        if (
+          document.querySelectorAll(
+            porId
+          ).length === 1
+        ) {
+          return porId;
+        }
+      } catch {
+        // Ignora.
+      }
+    }
+
+    const partes = [];
+
+    let atual = elemento;
+    let profundidade = 0;
+
+    while (
+      atual &&
+      atual.nodeType ===
+        Node.ELEMENT_NODE &&
+      profundidade < 6
+    ) {
+      let parte =
+        atual.tagName.toLowerCase();
+
+      const pai =
+        atual.parentElement;
+
+      if (pai) {
+        const irmaosMesmaTag =
+          Array.from(
+            pai.children
+          ).filter(
+            el =>
+              el.tagName ===
+              atual.tagName
+          );
+
+        if (
+          irmaosMesmaTag.length > 1
+        ) {
+          const indice =
+            irmaosMesmaTag.indexOf(
+              atual
+            ) + 1;
+
+          parte +=
+            `:nth-of-type(${indice})`;
+        }
+      }
+
+      partes.unshift(parte);
+
+      const candidato =
+        partes.join(" > ");
+
+      try {
+        if (
+          document.querySelectorAll(
+            candidato
+          ).length === 1
+        ) {
+          return candidato;
+        }
+      } catch {
+        break;
+      }
+
+      atual = pai;
+      profundidade++;
+    }
+
+    return partes.join(" > ");
+  }
+
+  function chaveSelecaoManual() {
+    return `fc-manual:${location.hostname}`;
+  }
+
+  function salvarSelecaoManual(
+    seletor
+  ) {
+    const chave =
+      chaveSelecaoManual();
+
+    chrome.storage.local.get(
+      { [chave]: [] },
+      resultado => {
+        const lista =
+          resultado[chave] || [];
+
+        if (
+          !lista.includes(seletor)
+        ) {
+          lista.push(seletor);
+
+          chrome.storage.local.set({
+            [chave]: lista
+          });
+        }
+      }
+    );
+  }
+
+  function aplicarSelecaoManualSalva() {
+    const chave =
+      chaveSelecaoManual();
+
+    chrome.storage.local.get(
+      { [chave]: [] },
+      resultado => {
+        const lista =
+          resultado[chave] || [];
+
+        lista.forEach(seletor => {
+          try {
+            document
+              .querySelectorAll(
+                seletor
+              )
+              .forEach(elemento => {
+                elemento.classList.add(
+                  CLASSES.escondido
+                );
+
+                elemento.setAttribute(
+                  "data-fc-manual",
+                  "true"
+                );
+              });
+          } catch {
+            // Estrutura da página mudou.
+          }
+        });
+      }
+    );
+  }
+
+  function limparSelecaoManual() {
+    const chave =
+      chaveSelecaoManual();
+
+    chrome.storage.local.set({
+      [chave]: []
+    });
+
+    document
+      .querySelectorAll(
+        '[data-fc-manual="true"]'
+      )
+      .forEach(elemento => {
+        elemento.classList.remove(
+          CLASSES.escondido
+        );
+
+        elemento.removeAttribute(
+          "data-fc-manual"
+        );
+      });
+  }
+
+  function destacarElemento(
+    evento
+  ) {
+    if (!modoSelecaoAtivo) {
+      return;
+    }
+
+    const alvo =
+      evento.target;
+
+    if (
+      !(alvo instanceof Element)
+    ) {
+      return;
+    }
+
+    if (
+      alvo === elementoDestacado
+    ) {
+      return;
+    }
+
+    if (elementoDestacado) {
+      elementoDestacado.classList.remove(
+        CLASSES.destaqueSelecao
+      );
+    }
+
+    elementoDestacado =
+      alvo;
+
+    elementoDestacado.classList.add(
+      CLASSES.destaqueSelecao
+    );
+  }
+
+  function tratarCliqueSelecao(
+    evento
+  ) {
+    if (!modoSelecaoAtivo) {
+      return;
+    }
+
+    evento.preventDefault();
+    evento.stopPropagation();
+
+    const alvo =
+      evento.target;
+
+    if (
+      !(alvo instanceof Element)
+    ) {
+      return;
+    }
+
+    if (
+      elementoBloqueadoParaSelecaoManual(
+        alvo
+      )
+    ) {
+      ativarSeletorManual(false);
+      return;
+    }
+
+    const seletor =
+      gerarSeletorUnico(alvo);
+
+    alvo.classList.add(
+      CLASSES.escondido
+    );
+
+    alvo.setAttribute(
+      "data-fc-manual",
+      "true"
+    );
+
+    salvarSelecaoManual(
+      seletor
+    );
+
+    ativarSeletorManual(false);
+  }
+
+  function tratarEscapeSelecao(
+    evento
+  ) {
+    if (
+      evento.key === "Escape"
+    ) {
+      ativarSeletorManual(false);
+    }
+  }
+
+  function ativarSeletorManual(
+    ativar
+  ) {
+    modoSelecaoAtivo =
+      Boolean(ativar);
+
+    document.documentElement.classList.toggle(
+      CLASSES.modoSelecao,
+      modoSelecaoAtivo
+    );
+
+    if (modoSelecaoAtivo) {
+      document.addEventListener(
+        "mouseover",
+        destacarElemento,
+        true
+      );
+
+      document.addEventListener(
+        "click",
+        tratarCliqueSelecao,
+        true
+      );
+
+      document.addEventListener(
+        "keydown",
+        tratarEscapeSelecao,
+        true
+      );
+    } else {
+      document.removeEventListener(
+        "mouseover",
+        destacarElemento,
+        true
+      );
+
+      document.removeEventListener(
+        "click",
+        tratarCliqueSelecao,
+        true
+      );
+
+      document.removeEventListener(
+        "keydown",
+        tratarEscapeSelecao,
+        true
+      );
+
+      if (elementoDestacado) {
+        elementoDestacado.classList.remove(
+          CLASSES.destaqueSelecao
+        );
+
+        elementoDestacado = null;
+      }
+    }
+  }
+
+  // ===================================================
+  // CORES SUAVES
+  // ===================================================
+
+  function atualizarCoresDaPagina() {
+    if (
+      !preferencias.intensidadeCores
+    ) {
+      document.documentElement.removeAttribute(
+        "data-fc-tema"
+      );
+
+      return;
+    }
+
+    const body =
+      document.body;
+
+    if (!body) {
+      return;
+    }
+
+    const estilo =
+      getComputedStyle(body);
+
+    const cor =
+      estilo.backgroundColor;
+
+    const rgb =
+      cor.match(
+        /\d+(?:\.\d+)?/g
+      );
+
+    if (
+      !rgb ||
+      rgb.length < 3
+    ) {
       document.documentElement.setAttribute(
         "data-fc-tema",
         "claro"
       );
+
       return;
     }
 
-    const r = Number(rgb[0]);
-    const g = Number(rgb[1]);
-    const b = Number(rgb[2]);
+    const r =
+      Number(rgb[0]);
+
+    const g =
+      Number(rgb[1]);
+
+    const b =
+      Number(rgb[2]);
 
     const luminosidade =
-      (0.299 * r) +
-      (0.587 * g) +
-      (0.114 * b);
+      0.299 * r +
+      0.587 * g +
+      0.114 * b;
 
     document.documentElement.setAttribute(
       "data-fc-tema",
@@ -385,49 +979,139 @@
     );
   }
 
+  function aplicarIntensidadeCor() {
+    const valor =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Number(
+            preferencias.intensidadeCores
+          ) || 0
+        )
+      );
+
+    const ativo =
+      valor > 0;
+
+    const html =
+      document.documentElement;
+
+    html.classList.toggle(
+      CLASSES.coresSuaves,
+      ativo
+    );
+
+    if (ativo) {
+      /*
+       * A redução foi limitada para evitar que
+       * a página fique quase sem cor.
+       *
+       * 0%  = 100% da saturação
+       * 100% = 50% da saturação original
+       */
+      const satPagina =
+        Math.max(
+          0.50,
+          1 -
+            (valor / 100) *
+              0.50
+        );
+
+      html.style.setProperty(
+        "--fc-sat-pagina",
+        satPagina.toFixed(3)
+      );
+    } else {
+      html.style.removeProperty(
+        "--fc-sat-pagina"
+      );
+    }
+
+    atualizarCoresDaPagina();
+  }
+
+  // ===================================================
+  // APLICAÇÃO DAS PREFERÊNCIAS
+  // ===================================================
+
   function aplicarClasses() {
-    const html = document.documentElement;
+    const html =
+      document.documentElement;
 
     html.classList.toggle(
       CLASSES.modoCalmo,
-      Boolean(preferencias.modoCalmo)
+      Boolean(
+        preferencias.modoCalmo
+      )
     );
 
     html.classList.toggle(
       CLASSES.fonteLegivel,
-      Boolean(preferencias.fonteLegivel)
-    );
-
-    html.classList.toggle(
-      CLASSES.coresSuaves,
-      Boolean(preferencias.coresSuaves)
+      Boolean(
+        preferencias.fonteLegivel
+      )
     );
 
     html.classList.toggle(
       CLASSES.esconderDistracoes,
-      Boolean(preferencias.esconderDistracoes)
+      Boolean(
+        preferencias.esconderDistracoes
+      )
     );
 
-    atualizarCoresDaPagina();
+    html.classList.toggle(
+      CLASSES.guiaLeitura,
+      Boolean(
+        preferencias.guiaLeitura
+      )
+    );
 
-    if (preferencias.esconderDistracoes) {
+    html.classList.toggle(
+      CLASSES.modoTexto,
+      Boolean(
+        preferencias.modoTexto
+      )
+    );
+
+    aplicarIntensidadeCor();
+
+    if (
+      !preferencias.guiaLeitura
+    ) {
+      removerDestaqueGuia();
+    }
+
+    if (
+      preferencias.esconderDistracoes
+    ) {
       esconderDistracoesAgora();
     } else {
       restaurarDistracoes();
     }
 
-    if (preferencias.modoCalmo) {
+    if (
+      preferencias.modoCalmo
+    ) {
       pausarMidia();
     }
   }
 
+  // ===================================================
+  // MÍDIA
+  // ===================================================
+
   function pausarMidia() {
-    if (!preferencias.modoCalmo) {
+    if (
+      !preferencias.modoCalmo
+    ) {
       return;
     }
 
     document
-      .querySelectorAll("video, audio")
+      .querySelectorAll(
+        "video, audio"
+      )
       .forEach(midia => {
         try {
           if (!midia.paused) {
@@ -435,7 +1119,10 @@
           }
 
           midia.autoplay = false;
-          midia.removeAttribute("autoplay");
+
+          midia.removeAttribute(
+            "autoplay"
+          );
         } catch {
           // Alguns players bloqueiam alterações.
         }
@@ -448,11 +1135,15 @@
     }
 
     observadorMidia =
-      new MutationObserver(() => {
-        if (preferencias.modoCalmo) {
-          pausarMidia();
+      new MutationObserver(
+        () => {
+          if (
+            preferencias.modoCalmo
+          ) {
+            pausarMidia();
+          }
         }
-      });
+      );
 
     observadorMidia.observe(
       document.documentElement,
@@ -467,7 +1158,8 @@
       evento => {
         if (
           preferencias.modoCalmo &&
-          evento.target instanceof HTMLMediaElement
+          evento.target instanceof
+            HTMLMediaElement
         ) {
           try {
             evento.target.pause();
@@ -480,26 +1172,37 @@
     );
   }
 
+  // ===================================================
+  // OBSERVADOR DE DISTRAÇÕES
+  // ===================================================
+
   function iniciarObservadorDistracoes() {
     if (observadorDOM) {
       return;
     }
 
     observadorDOM =
-      new MutationObserver(() => {
-        if (
-          !preferencias.esconderDistracoes
-        ) {
-          return;
+      new MutationObserver(
+        () => {
+          if (
+            !preferencias.esconderDistracoes
+          ) {
+            return;
+          }
+
+          clearTimeout(
+            restauracaoAgendada
+          );
+
+          restauracaoAgendada =
+            setTimeout(
+              () => {
+                esconderDistracoesAgora();
+              },
+              250
+            );
         }
-
-        clearTimeout(restauracaoAgendada);
-
-        restauracaoAgendada =
-          setTimeout(() => {
-            esconderDistracoesAgora();
-          }, 250);
-      });
+      );
 
     observadorDOM.observe(
       document.documentElement,
@@ -510,8 +1213,14 @@
     );
   }
 
+  // ===================================================
+  // LEITURA EM VOZ ALTA
+  // ===================================================
+
   function falarTexto(texto) {
-    if (!("speechSynthesis" in window)) {
+    if (
+      !("speechSynthesis" in window)
+    ) {
       return;
     }
 
@@ -552,7 +1261,8 @@
   function falarProximoTrecho() {
     if (
       !falando ||
-      indiceFala >= filaFala.length
+      indiceFala >=
+        filaFala.length
     ) {
       falando = false;
       filaFala = [];
@@ -564,7 +1274,10 @@
         filaFala[indiceFala]
       );
 
-    fala.lang = document.documentElement.lang || "pt-BR";
+    fala.lang =
+      document.documentElement
+        .lang || "pt-BR";
+
     fala.rate = 0.95;
     fala.pitch = 1;
 
@@ -578,10 +1291,18 @@
       filaFala = [];
     };
 
-    window.speechSynthesis.speak(fala);
+    window.speechSynthesis.speak(
+      fala
+    );
   }
 
-  function atualizarPreferencias(novas) {
+  // ===================================================
+  // PREFERÊNCIAS
+  // ===================================================
+
+  function atualizarPreferencias(
+    novas
+  ) {
     preferencias = {
       ...preferencias,
       ...novas
@@ -604,36 +1325,62 @@
     );
   }
 
-  // Mantém todas as abas abertas em sincronia: se o usuário mudar uma
-  // preferência pelo popup ou pelo atalho de teclado em uma aba, as
-  // demais abas já abertas refletem a mudança imediatamente, sem
-  // precisar recarregar a página.
   function ouvirMudancasDeArmazenamento() {
-    chrome.storage.onChanged.addListener((mudancas, area) => {
-      if (area !== "sync") {
-        return;
-      }
+    chrome.storage.onChanged.addListener(
+      (mudancas, area) => {
+        if (area !== "sync") {
+          return;
+        }
 
-      const atualizacoes = {};
-      let houveMudanca = false;
+        const atualizacoes = {};
+        let houveMudanca = false;
 
-      for (const chave of Object.keys(PREFERENCIAS_PADRAO)) {
-        if (chave in mudancas) {
-          atualizacoes[chave] = Boolean(
-            mudancas[chave].newValue
+        for (
+          const chave of Object.keys(
+            PREFERENCIAS_PADRAO
+          )
+        ) {
+          if (
+            chave in mudancas
+          ) {
+            const novoValor =
+              mudancas[chave]
+                .newValue;
+
+            atualizacoes[chave] =
+              typeof PREFERENCIAS_PADRAO[
+                chave
+              ] === "boolean"
+                ? Boolean(
+                    novoValor
+                  )
+                : Number(
+                    novoValor
+                  ) || 0;
+
+            houveMudanca = true;
+          }
+        }
+
+        if (houveMudanca) {
+          atualizarPreferencias(
+            atualizacoes
           );
-          houveMudanca = true;
         }
       }
-
-      if (houveMudanca) {
-        atualizarPreferencias(atualizacoes);
-      }
-    });
+    );
   }
 
+  // ===================================================
+  // MENSAGENS
+  // ===================================================
+
   chrome.runtime.onMessage.addListener(
-    (mensagem, remetente, responder) => {
+    (
+      mensagem,
+      remetente,
+      responder
+    ) => {
       if (
         mensagem?.tipo ===
         "ATUALIZAR_PREFERENCIAS"
@@ -664,14 +1411,55 @@
         return true;
       }
 
+      if (
+        mensagem?.tipo ===
+        "ATIVAR_SELETOR_MANUAL"
+      ) {
+        ativarSeletorManual(
+          Boolean(
+            mensagem.ativar
+          )
+        );
+
+        responder?.({
+          ok: true
+        });
+
+        return true;
+      }
+
+      if (
+        mensagem?.tipo ===
+        "LIMPAR_SELECAO_MANUAL"
+      ) {
+        limparSelecaoManual();
+
+        responder?.({
+          ok: true
+        });
+
+        return true;
+      }
+
       return false;
     }
   );
 
+  // ===================================================
+  // INICIALIZAÇÃO
+  // ===================================================
+
   function corpoPronto() {
     carregarPreferencias();
+
+    aplicarSelecaoManualSalva();
+
     iniciarObservadorDistracoes();
+
     iniciarObservadorMidia();
+
+    iniciarGuiaLeitura();
+
     ouvirMudancasDeArmazenamento();
 
     setTimeout(
@@ -692,11 +1480,9 @@
     document.addEventListener(
       "DOMContentLoaded",
       corpoPronto,
-      {
-        once: true
-      }
+      { once: true }
     );
   } else {
     corpoPronto();
   }
-})();
+})();s
