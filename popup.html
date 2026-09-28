@@ -1,24 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Foco Calmo</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       width: 340px;
       margin: 0;
       padding: 18px;
-
       font-family: Arial, Helvetica, sans-serif;
-
       background: #f4f5f7;
       color: #252525;
     }
@@ -26,7 +20,6 @@
     .cabecalho {
       display: flex;
       align-items: center;
-
       gap: 12px;
       margin-bottom: 18px;
     }
@@ -34,83 +27,59 @@
     .icone {
       width: 44px;
       height: 44px;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       border-radius: 14px;
-
       background: #e4e8ec;
-
       font-size: 23px;
     }
 
     .titulo-area h1 {
       margin: 0;
-
       font-size: 20px;
       line-height: 1.2;
-
       color: #20242a;
     }
 
     .titulo-area p {
       margin: 4px 0 0;
-
       font-size: 12px;
-
       color: #68717b;
     }
 
     .descricao {
       margin: 0 0 16px;
-
       font-size: 13px;
       line-height: 1.5;
-
       color: #555e68;
     }
 
     .secao-titulo {
       margin: 18px 0 8px;
-
       font-size: 12px;
       font-weight: bold;
-
       text-transform: uppercase;
       letter-spacing: 0.7px;
-
       color: #68717b;
     }
 
     .opcao {
       display: flex;
       align-items: center;
-
       gap: 12px;
-
       padding: 12px;
       margin-bottom: 8px;
-
       border: 1px solid #dde1e5;
       border-radius: 13px;
-
       background: #ffffff;
-
       cursor: pointer;
-
-      transition:
-        transform 0.15s ease,
-        border-color 0.15s ease,
-        background 0.15s ease;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
     .opcao:hover {
       transform: translateY(-1px);
-
       border-color: #c6ccd2;
-
       background: #fafafa;
     }
 
@@ -122,22 +91,18 @@
     .opcao-slider {
       cursor: default;
       align-items: flex-start;
+      flex-wrap: wrap;
     }
 
     .icone-opcao {
       width: 36px;
       height: 36px;
-
       flex-shrink: 0;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       border-radius: 10px;
-
       background: #edf0f2;
-
       font-size: 17px;
     }
 
@@ -148,96 +113,80 @@
 
     .nome-opcao {
       display: block;
-
       margin-bottom: 3px;
-
       font-size: 14px;
       font-weight: 700;
-
       color: #292e34;
     }
 
     .descricao-opcao {
       display: block;
-
       font-size: 11px;
       line-height: 1.35;
-
       color: #727b84;
     }
 
     input[type="range"] {
       width: 100%;
-
       margin-top: 8px;
-
       accent-color: #4e6473;
+    }
+
+    select {
+      width: 100%;
+      margin-top: 8px;
+      padding: 7px 8px;
+      border: 1px solid #d4d9de;
+      border-radius: 8px;
+      background: white;
+      font-family: inherit;
+      font-size: 12px;
+      color: #292e34;
     }
 
     .valor-slider {
       flex-shrink: 0;
-
       align-self: flex-start;
-
       margin-top: 2px;
-
       min-width: 34px;
-
       text-align: right;
-
       font-size: 12px;
       font-weight: 700;
-
       color: #4e6473;
     }
 
     .switch {
       position: relative;
-
       width: 42px;
       height: 24px;
-
       flex-shrink: 0;
     }
 
     .switch input {
       opacity: 0;
-
       width: 0;
       height: 0;
     }
 
     .slider {
       position: absolute;
-
       inset: 0;
-
       border-radius: 20px;
-
       background: #d2d6da;
-
       cursor: pointer;
-
       transition: 0.2s;
     }
 
     .slider::before {
       content: "";
-
       position: absolute;
-
       width: 18px;
       height: 18px;
-
       left: 3px;
       top: 3px;
-
       border-radius: 50%;
-
       background: white;
-
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-
       transition: 0.2s;
     }
 
@@ -251,36 +200,22 @@
 
     .botao-acao {
       display: block;
-
       width: 100%;
-
       border: 0;
-
       padding: 11px 14px;
-
       margin-bottom: 8px;
-
       border-radius: 11px;
-
       background: #3f5361;
-
       color: white;
-
       font-family: inherit;
-
       font-size: 13px;
       font-weight: 700;
-
       cursor: pointer;
-
-      transition:
-        transform 0.15s ease,
-        background 0.15s ease;
+      transition: transform 0.15s ease, background 0.15s ease;
     }
 
     .botao-acao:hover {
       background: #344650;
-
       transform: translateY(-1px);
     }
 
@@ -290,9 +225,7 @@
 
     .botao-secundario {
       background: #ffffff;
-
       color: #3f5361;
-
       border: 1px solid #dde1e5;
     }
 
@@ -302,22 +235,15 @@
 
     .rodape {
       margin-top: 16px;
-
       padding-top: 12px;
-
       border-top: 1px solid #dde1e5;
-
       text-align: center;
-
       font-size: 10px;
-
       color: #89919a;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      * {
-        transition: none !important;
-      }
+      * { transition: none !important; }
     }
   </style>
 </head>
@@ -325,261 +251,118 @@
 <body>
 
   <header class="cabecalho">
-
-    <div class="icone">
-      🌿
-    </div>
-
+    <div class="icone">🌿</div>
     <div class="titulo-area">
-
-      <h1>
-        Foco Calmo
-      </h1>
-
-      <p>
-        Acessibilidade e concentração
-      </p>
-
+      <h1>Foco Calmo</h1>
+      <p>Acessibilidade e concentração</p>
     </div>
-
   </header>
 
   <p class="descricao">
-    Escolha apenas os recursos que você deseja utilizar.
-    Eles funcionam de forma independente.
+    Escolha apenas os recursos que você deseja utilizar. Eles funcionam de forma independente.
   </p>
 
-  <div class="secao-titulo">
-    Recursos
-  </div>
+  <div class="secao-titulo">Recursos</div>
 
   <label class="opcao" data-opcao="modoCalmo">
-
-    <div class="icone-opcao">
-      🧘
-    </div>
-
+    <div class="icone-opcao">🧘</div>
     <div class="texto-opcao">
-
-      <span class="nome-opcao">
-        Modo Calmo
-      </span>
-
-      <span class="descricao-opcao">
-        Reduz animações e movimentos da página.
-      </span>
-
+      <span class="nome-opcao">Modo Calmo</span>
+      <span class="descricao-opcao">Reduz animações e movimentos da página.</span>
     </div>
-
     <span class="switch">
-
-      <input
-        type="checkbox"
-        id="modoCalmo"
-      >
-
+      <input type="checkbox" id="modoCalmo">
       <span class="slider"></span>
-
     </span>
-
   </label>
 
   <label class="opcao" data-opcao="fonteLegivel">
-
-    <div class="icone-opcao">
-      Aa
-    </div>
-
+    <div class="icone-opcao">Aa</div>
     <div class="texto-opcao">
-
-      <span class="nome-opcao">
-        Fonte Legível
-      </span>
-
-      <span class="descricao-opcao">
-        Aumenta e organiza o texto para facilitar a leitura.
-      </span>
-
+      <span class="nome-opcao">Fonte Legível</span>
+      <span class="descricao-opcao">Aumenta e organiza o texto para facilitar a leitura.</span>
     </div>
-
     <span class="switch">
-
-      <input
-        type="checkbox"
-        id="fonteLegivel"
-      >
-
+      <input type="checkbox" id="fonteLegivel">
       <span class="slider"></span>
-
     </span>
-
   </label>
 
-  <div
-    class="opcao opcao-slider"
-    data-opcao="intensidadeCores"
-  >
-
-    <div class="icone-opcao">
-      ◐
-    </div>
-
+  <div class="opcao opcao-slider" data-opcao="intensidadeCores">
+    <div class="icone-opcao">◐</div>
     <div class="texto-opcao">
-
-      <span class="nome-opcao">
-        Cores Suaves
-      </span>
-
-      <span class="descricao-opcao">
-        Ajuste a intensidade de redução de cor.
-      </span>
-
-      <input
-        type="range"
-        id="intensidadeCores"
-        min="0"
-        max="100"
-        step="5"
-        value="0"
-      >
-
+      <span class="nome-opcao">Cores Suaves</span>
+      <span class="descricao-opcao">Suaviza cores, brilho e contraste da página.</span>
+      <input type="range" id="intensidadeCores" min="0" max="100" step="5" value="0">
     </div>
-
-    <span
-      class="valor-slider"
-      id="valorIntensidadeCores"
-    >
-      0%
-    </span>
-
+    <span class="valor-slider" id="valorIntensidadeCores">0%</span>
   </div>
 
-  <label
-    class="opcao"
-    data-opcao="esconderDistracoes"
-  >
-
-    <div class="icone-opcao">
-      ✦
-    </div>
-
+  <div class="opcao opcao-slider" data-opcao="tomSobreposicao">
+    <div class="icone-opcao">🎨</div>
     <div class="texto-opcao">
-
-      <span class="nome-opcao">
-        Esconder Distrações
-      </span>
-
-      <span class="descricao-opcao">
-        Esconde anúncios, banners e pop-ups identificados automaticamente.
-      </span>
-
+      <span class="nome-opcao">Sobreposição de Cor</span>
+      <span class="descricao-opcao">Filtro de cor sobre a tela, como lentes coloridas.</span>
+      <select id="tomSobreposicao">
+        <option value="nenhum">Nenhuma</option>
+        <option value="azul">Azul</option>
+        <option value="ambar">Âmbar</option>
+        <option value="verde">Verde</option>
+        <option value="rosa">Rosa</option>
+      </select>
+      <input type="range" id="intensidadeSobreposicao" min="10" max="100" step="10" value="30">
     </div>
-
-    <span class="switch">
-
-      <input
-        type="checkbox"
-        id="esconderDistracoes"
-      >
-
-      <span class="slider"></span>
-
-    </span>
-
-  </label>
-
-  <label
-    class="opcao"
-    data-opcao="guiaLeitura"
-  >
-
-    <div class="icone-opcao">
-      ➜
-    </div>
-
-    <div class="texto-opcao">
-
-      <span class="nome-opcao">
-        Guia de Leitura
-      </span>
-
-      <span class="descricao-opcao">
-       Destaca o trecho de texto quando você passa o cursor sobre ele.
-      </span>
-
-    </div>
-
-    <span class="switch">
-
-      <input
-        type="checkbox"
-        id="guiaLeitura"
-      >
-
-      <span class="slider"></span>
-
-    </span>
-
-  </label>
-
-  <label
-    class="opcao"
-    data-opcao="modoTexto"
-  >
-
-    <div class="icone-opcao">
-      ▤
-    </div>
-
-    <div class="texto-opcao">
-
-      <span class="nome-opcao">
-        Modo Texto
-      </span>
-
-      <span class="descricao-opcao">
-        Remove imagens e vídeos da página inteira.
-      </span>
-
-    </div>
-
-    <span class="switch">
-
-      <input
-        type="checkbox"
-        id="modoTexto"
-      >
-
-      <span class="slider"></span>
-
-    </span>
-
-  </label>
-
-  <div class="secao-titulo">
-    Seleção manual
   </div>
 
-  <button
-    id="botaoSelecionar"
-    class="botao-acao"
-  >
+  <label class="opcao" data-opcao="esconderDistracoes">
+    <div class="icone-opcao">✦</div>
+    <div class="texto-opcao">
+      <span class="nome-opcao">Esconder Distrações</span>
+      <span class="descricao-opcao">Esconde anúncios, banners e pop-ups identificados automaticamente.</span>
+    </div>
+    <span class="switch">
+      <input type="checkbox" id="esconderDistracoes">
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <label class="opcao" data-opcao="guiaLeitura">
+    <div class="icone-opcao">➜</div>
+    <div class="texto-opcao">
+      <span class="nome-opcao">Guia de Leitura</span>
+      <span class="descricao-opcao">Destaca o parágrafo por onde o mouse passa.</span>
+    </div>
+    <span class="switch">
+      <input type="checkbox" id="guiaLeitura">
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <label class="opcao" data-opcao="modoTexto">
+    <div class="icone-opcao">▤</div>
+    <div class="texto-opcao">
+      <span class="nome-opcao">Modo Texto</span>
+      <span class="descricao-opcao">Remove imagens e vídeos da página inteira.</span>
+    </div>
+    <span class="switch">
+      <input type="checkbox" id="modoTexto">
+      <span class="slider"></span>
+    </span>
+  </label>
+
+  <div class="secao-titulo">Seleção manual</div>
+
+  <button id="botaoSelecionar" class="botao-acao">
     Escolher elemento para esconder
   </button>
 
-  <button
-    id="botaoLimparSelecao"
-    class="botao-acao botao-secundario"
-  >
+  <button id="botaoLimparSelecao" class="botao-acao botao-secundario">
     Restaurar elementos desta página
   </button>
 
-  <div class="rodape">
-    Foco Calmo • Acessibilidade
-  </div>
+  <div class="rodape">Foco Calmo • Acessibilidade</div>
 
   <script src="popup.js"></script>
 
 </body>
-
 </html>
